@@ -1,5 +1,5 @@
 {
-  "name": "@agentwatch/cli",
+  "name": "@agentwatch-web3/cli",
   "version": "0.1.0",
   "description": "AgentWatch CLI — MCP security proxy, HMAC audit chain, L0/L1 risk detection, and tamper-proof log verification",
   "type": "module",

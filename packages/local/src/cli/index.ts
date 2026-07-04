@@ -62,7 +62,7 @@ program
     await proxyCommand(downstream, {});
   });
 
-/** init 注入：npx @agentwatch/cli --config path -- downstream（无 proxy 子命令） */
+/** init 注入：npx @agentwatch-web3/cli --config path -- downstream（无 proxy 子命令） */
 function tryImplicitProxyLaunch(): boolean {
   const argv = process.argv.slice(2);
   if (argv.length === 0) {

@@ -2,7 +2,7 @@
 
 > **定位**：部署在 AI Agent 与 MCP Server 之间的本地安全网关。拦截每一次 `tools/call`，在 **<50ms** 内完成 L0 规则 + L1 统计检测，输出 ALLOW / WARN / BLOCK 决策，并写入防篡改审计日志。
 
-**包名**：`@agentwatch/mcp-proxy` · **版本**：`0.1.0` · **Node.js** >= 18
+**包名**：`@agentwatch-web3/cli` · **版本**：`0.1.0` · **Node.js** >= 18
 
 ---
 
@@ -63,11 +63,11 @@ git clone <repo-url> agent-watch-v0 && cd agent-watch-v0
 npm install
 npm run build
 npm pack
-# 输出：agentwatch-mcp-proxy-0.1.0.tgz
+# 输出：agentwatch-web3-cli-0.1.0.tgz
 
 mkdir /tmp/aw-demo && cd /tmp/aw-demo
 npm init -y
-npm install /path/to/agentwatch-mcp-proxy-0.1.0.tgz
+npm install /path/to/agentwatch-web3-cli-0.1.0.tgz
 
 npx agentwatch --help
 ```
@@ -75,7 +75,7 @@ npx agentwatch --help
 ### 方式 B：全局安装（发布后）
 
 ```bash
-npm install -g @agentwatch/mcp-proxy
+npm install -g @agentwatch-web3/cli
 agentwatch --help
 ```
 
@@ -122,7 +122,7 @@ agentwatch proxy -- npx -y @okx_ai/okx-trade-mcp
 agentwatch proxy --config ~/.agentwatch/config.yaml -- npx -y @okx_ai/okx-trade-mcp
 
 # init 注入格式（无 proxy 子命令）也支持
-npx @agentwatch/mcp-proxy --config ~/.agentwatch/config.yaml -- npx -y @okx_ai/okx-trade-mcp
+npx @agentwatch-web3/cli --config ~/.agentwatch/config.yaml -- npx -y @okx_ai/okx-trade-mcp
 ```
 
 ### 验证 HMAC 审计链（A2A 验收）

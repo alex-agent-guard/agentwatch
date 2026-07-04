@@ -111,7 +111,7 @@ agentwatch/
 |   |-- local/                         # ======== 本地层 (MCP 中间件) ========
 |   |   |-- package.json               # 依赖: shared, ws, yaml, keytar
 |   |   |-- tsconfig.json
-|   |   |-- cli.ts                     # CLI 入口 (npx @agentwatch/mcp-proxy)
+|   |   |-- cli.ts                     # CLI 入口 (npx @agentwatch-web3/cli)
 |   |   |
 |   |   |-- src/
 |   |   |   |

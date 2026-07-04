@@ -1,6 +1,6 @@
 # AgentWatch V0 npm 发包指引
 
-> 包名：`@agentwatch/mcp-proxy`  
+> 包名：`@agentwatch-web3/cli`  
 > Week1 首版：`0.1.0`
 
 ---
@@ -89,7 +89,7 @@ npm publish --access public
 ### 3.4 本地验证安装
 
 ```bash
-npm install -g ./agentwatch-mcp-proxy-0.1.0.tgz
+npm install -g ./agentwatch-web3-cli-0.1.0.tgz
 agentwatch --help
 ```
 
@@ -101,14 +101,14 @@ agentwatch --help
 
 | 场景 | 操作 |
 |------|------|
-| 刚发布有致命 bug | `npm deprecate @agentwatch/mcp-proxy@0.1.x "reason"` |
+| 刚发布有致命 bug | `npm deprecate @agentwatch-web3/cli@0.1.x "reason"` |
 | 需强制下线 | 联系 npm support unpublish（72h 内且几乎无下载） |
 | 正常修复 | 发 PATCH 版本，不 unpublish |
 
 ### 4.2 用户侧回滚
 
 ```bash
-npm install -g @agentwatch/mcp-proxy@0.1.0
+npm install -g @agentwatch-web3/cli@0.1.0
 # 或 pin 在 MCP 配置 args 中指定版本
 ```
 

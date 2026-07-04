@@ -63,7 +63,7 @@ describe('CLI init', () => {
     const updated = JSON.parse(readFileSync(mcpPath, 'utf8')) as {
       mcpServers: { okx: { args: string[] } };
     };
-    expect(updated.mcpServers.okx.args).toContain('@agentwatch/cli');
+    expect(updated.mcpServers.okx.args).toContain('@agentwatch-web3/cli');
     expect(existsSync(join(homeDir, '.agentwatch', 'config.yaml'))).toBe(true);
     logSpy.mockRestore();
   });
@@ -88,7 +88,7 @@ describe('CLI mcp-config helpers', () => {
     const patched = injectOkxProxyConfig({ mcpServers: {} }, configPath);
     expect(patched.mcpServers?.['okx']?.args).toEqual([
       '-y',
-      '@agentwatch/cli',
+      '@agentwatch-web3/cli',
       '--config',
       configPath,
       '--',

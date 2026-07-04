@@ -15,7 +15,7 @@ resolve_agentwatch() {
     echo "npx tsx $REPO_ROOT/packages/local/src/cli/index.ts"
     return
   fi
-  echo "npx @agentwatch/cli"
+  echo "npx @agentwatch-web3/cli"
 }
 
 AGENTWATCH="$(resolve_agentwatch)"
@@ -30,7 +30,7 @@ export AGENTWATCH_API_KEY="${AGENTWATCH_API_KEY:-demo}"
 echo "=== AgentWatch A2A Demo ==="
 echo ""
 echo "[1/4] Installing..."
-npm install -g @agentwatch/cli 2>/dev/null || true
+npm install -g @agentwatch-web3/cli 2>/dev/null || true
 echo "      (skip if already installed; local dev uses: $AGENTWATCH)"
 echo ""
 echo "[2/4] Initializing..."

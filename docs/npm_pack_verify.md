@@ -1,6 +1,6 @@
 # NPM 打包安装验收流程
 
-> 适用版本：`@agentwatch/cli@0.1.0`  
+> 适用版本：`@agentwatch-web3/cli@0.1.0`  
 > 前置：`npm run build` 编译 dist，Node.js >= 18
 
 ---
@@ -11,7 +11,7 @@
 cd /path/to/agent-watch-v0
 npm run build
 npm pack
-# 输出示例：agentwatch-cli-0.1.0.tgz
+# 输出示例：agentwatch-web3-cli-0.1.0.tgz
 ```
 
 ## 2. 临时目录本地安装
@@ -19,7 +19,7 @@ npm pack
 ```bash
 mkdir /tmp/agentwatch-pack-test && cd /tmp/agentwatch-pack-test
 npm init -y
-npm install /path/to/agentwatch-cli-0.1.0.tgz
+npm install /path/to/agentwatch-web3-cli-0.1.0.tgz
 ```
 
 > 空目录需先 `npm init -y`，否则 `npm install ./xxx.tgz` 不会创建 `node_modules`。
@@ -76,7 +76,7 @@ PACK_VERIFY=1 npm run test:pack --prefix packages/local
 
 | 字段 | 值 | 说明 |
 |------|-----|------|
-| `name` | `@agentwatch/cli` | npm 公开发布包名 |
+| `name` | `@agentwatch-web3/cli` | npm 公开发布包名 |
 | `bin.agentwatch` | `dist/packages/local/src/cli/index.js` | 全局 CLI 入口 |
 | `imports` | `@packages/shared/*` → `dist/packages/shared/*` | ESM 路径别名解析 |
 | `dependencies` | better-sqlite3, byline, chalk, commander | 运行时依赖 |

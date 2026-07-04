@@ -18,7 +18,7 @@ export OKX_API_KEY=demo OKX_SECRET_KEY=demo OKX_PASSPHRASE=demo OKX_PROJECT_ID=d
 | 时间 | 画面 | 旁白 / 字幕 |
 |------|------|-------------|
 | 0:00–0:15 | Logo / 标题卡 | 「这是 AgentWatch，你的 AI Agent 的安全安全带」 |
-| 0:15–0:30 | 终端安装 | `npm install -g @agentwatch/cli && agentwatch init` |
+| 0:15–0:30 | 终端安装 | `npm install -g @agentwatch-web3/cli && agentwatch init` |
 | 0:30–0:50 | 启动代理 + 拦截日志 | `agentwatch proxy -- node scripts/echo-mcp.js` — 展示 ALLOW / BLOCK 实时日志 |
 | 0:50–1:15 | 审计验收 | `agentwatch audit verify` → `✅ Chain verified: N entries intact` |
 | 1:15–1:30 | 结尾卡 | 「CertiK 查 token 风险，AgentWatch 保操作安全」 |

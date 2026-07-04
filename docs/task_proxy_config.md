@@ -42,7 +42,7 @@ Config Manager 负责加载、解析和管理 AgentWatch 的配置文件（YAML 
 | CFG-05 | 配置 schema 验证 | P0 | 解析后的配置对象 | 验证后的配置 / 错误 | `zod` 或 `joi` | `待实现` | ① 所有必填字段存在且类型正确 ② 默认值填充（如 maxDetectionLatencyMs 默认 50）③ 无效配置时输出清晰错误信息 |
 | CFG-06 | CLI 参数解析 (`--config` 路径) | P0 | `process.argv` | 配置文件绝对路径 | `commander` 或 `minimist` | `待实现` | ① 支持 `--config <path>` 参数 ② 无参数时尝试默认路径 `~/.agentwatch/config.yaml` ③ `--` 之后的参数作为被代理 MCP Server 的命令 |
 | CFG-07 | 配置热加载（文件监听） | P2 | 配置文件路径 | 自动 reload 事件 | `fs.watch` 或 `chokidar` | `待实现` | ① V0 可 defer，V1 实现 ② 文件变更后自动调用 reload() ③ 防抖处理（500ms） |
-| CFG-08 | MCP 配置集成辅助 — 生成 mcpServers JSON 配置 | P2 | `ProxyConfig` | JSON 配置片段 | 无 | `待实现` | ① 输出符合 Claude Desktop / Cursor MCP 配置格式 ② args 中正确插入 `@agentwatch/mcp-proxy` 及 `--config` 参数 |
+| CFG-08 | MCP 配置集成辅助 — 生成 mcpServers JSON 配置 | P2 | `ProxyConfig` | JSON 配置片段 | 无 | `待实现` | ① 输出符合 Claude Desktop / Cursor MCP 配置格式 ② args 中正确插入 `@agentwatch-web3/cli` 及 `--config` 参数 |
 
 ---
 
@@ -170,7 +170,7 @@ Config Manager 负责加载、解析和管理 AgentWatch 的配置文件（YAML 
 内容: Claude Desktop MCP 配置格式示例
 完成度: 100%
 代码状态: 可直接用（作为文档说明）
-说明: 展示了如何在 mcpServers 中使用 @agentwatch/mcp-proxy 作为中间层
+说明: 展示了如何在 mcpServers 中使用 @agentwatch-web3/cli 作为中间层
 需补充: 无（这是用户配置文档，不是代码）
 ```
 

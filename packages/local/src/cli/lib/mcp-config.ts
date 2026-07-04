@@ -12,7 +12,7 @@ export interface McpConfigDocument {
   [key: string]: unknown;
 }
 
-const PROXY_PACKAGE = '@agentwatch/cli';
+const PROXY_PACKAGE = '@agentwatch-web3/cli';
 const DEFAULT_DOWNSTREAM = ['npx', '-y', '@okx_ai/okx-trade-mcp'];
 
 /** 解析 MCP JSON 配置文件 */
@@ -158,7 +158,7 @@ export const MANUAL_MCP_SETUP_GUIDE = `
       "command": "npx",
       "args": [
         "-y",
-        "@agentwatch/cli",
+        "@agentwatch-web3/cli",
         "--config",
         "~/.agentwatch/config.yaml",
         "--",

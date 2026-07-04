@@ -3,7 +3,7 @@
 > **复查基准**：`docs/产品架构完整版.md`（V0 MVP §3–§7、§10–§11）  
 > **辅助文档**：`agentwatch_v0_mvp_tasklist.md`、各 `task_*.md`、`v0-freeze-report.md`  
 > **复查时间**：2026-07-04  
-> **代码快照**：`@agentwatch/mcp-proxy@0.1.0`，测试 **281 passed / 2 skipped**
+> **代码快照**：`@agentwatch-web3/cli@0.1.0`，测试 **281 passed / 2 skipped**
 
 ---
 
@@ -283,7 +283,7 @@ sqlite3 ~/.agentwatch/agentwatch.db ".tables"
 
 ### 最终结论
 
-**AgentWatch V0 `@agentwatch/mcp-proxy@0.1.0` 满足黑客松 MVP 交付标准。**  
+**AgentWatch V0 `@agentwatch-web3/cli@0.1.0` 满足黑客松 MVP 交付标准。**  
 架构 V0 P0 能力完整；多项 V1 能力已超前落地；性能核心路径达标；文档与 README 已同步至当前实现状态。
 
 ---

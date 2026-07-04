@@ -17,13 +17,13 @@ function findRepoRoot(): string {
     const packageJsonPath = join(dir, 'package.json');
     if (existsSync(packageJsonPath)) {
       const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { name?: string };
-      if (pkg.name === '@agentwatch/cli') {
+      if (pkg.name === '@agentwatch-web3/cli') {
         return dir;
       }
     }
     dir = dirname(dir);
   }
-  throw new Error('Unable to locate @agentwatch/cli repository root');
+  throw new Error('Unable to locate @agentwatch-web3/cli repository root');
 }
 
 function run(command: string, cwd: string, env?: NodeJS.ProcessEnv): string {
@@ -50,8 +50,8 @@ function resolveCliCommand(installDir: string): { cmd: string; args: string[] } 
   const entry = join(
     installDir,
     'node_modules',
-    '@agentwatch',
-    'mcp-proxy',
+    '@agentwatch-web3',
+    'cli',
     'dist',
     'packages',
     'local',

@@ -50,7 +50,7 @@ export function checkMcpProxyInjection(): StatusCheckResult {
       return {
         label: 'MCP 代理注入',
         level: 'warn',
-        detail: `检测到 ${String(candidates.length)} 个配置文件，均未注入 @agentwatch/cli`,
+        detail: `检测到 ${String(candidates.length)} 个配置文件，均未注入 @agentwatch-web3/cli`,
       };
     }
 
