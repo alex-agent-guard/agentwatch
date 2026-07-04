@@ -1,11 +1,12 @@
 {
   "name": "@agentwatch-web3/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AgentWatch CLI — MCP security proxy, HMAC audit chain, L0/L1 risk detection, and tamper-proof log verification",
   "type": "module",
   "main": "./dist/packages/local/src/cli/index.js",
   "types": "./dist/packages/local/src/cli/index.d.ts",
   "bin": {
+    "agentwatch-web3": "./dist/packages/local/src/cli/index.js",
     "agentwatch": "./dist/packages/local/src/cli/index.js"
   },
   "imports": {
@@ -22,6 +23,7 @@
     "test": "npm run test --prefix packages/local",
     "bench": "npm run bench --prefix packages/local",
     "pack:verify": "npm run build && PACK_VERIFY=1 npm run test:pack --prefix packages/local",
+    "prepublishOnly": "npm run build",
     "start": "npm run start --prefix packages/local"
   },
   "keywords": [

@@ -43,9 +43,11 @@ function run(command: string, cwd: string, env?: NodeJS.ProcessEnv): string {
 }
 
 function resolveCliCommand(installDir: string): { cmd: string; args: string[] } {
-  const binPath = join(installDir, 'node_modules', '.bin', 'agentwatch');
-  if (existsSync(binPath)) {
-    return { cmd: binPath, args: [] };
+  for (const binName of ['agentwatch-web3', 'agentwatch']) {
+    const binPath = join(installDir, 'node_modules', '.bin', binName);
+    if (existsSync(binPath)) {
+      return { cmd: binPath, args: [] };
+    }
   }
   const entry = join(
     installDir,
@@ -176,6 +178,7 @@ describe.skipIf(process.env['PACK_VERIFY'] !== '1')('NPM pack install verificati
     const help = runCli(installDir, ['--help']);
     expect(help).toContain('AgentWatch MCP 安全代理');
     expect(help).toMatch(/proxy|init|status|logs|audit/);
+    expect(help).toContain('AgentWatch MCP 安全代理');
   });
 
   it(
