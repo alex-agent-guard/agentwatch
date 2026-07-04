@@ -1,0 +1,36 @@
+# Tests & local dev
+packages/local/tests/
+packages/local/logs/
+**/*.test.ts
+**/__tests__/
+coverage/
+.vitest/
+
+# Build artifacts (dist is published; exclude maps from slim packages if desired)
+# *.map
+
+# Node & IDE
+node_modules/
+packages/local/node_modules/
+.cursor/
+.cursorrules
+
+# Draft / internal docs (published README + docs/npm_publish_guide stay in repo, not npm tarball)
+docs/
+*.md
+!README.md
+
+# Git & CI
+.git/
+.github/
+.gitignore
+
+# Local config & secrets
+.env
+.env.*
+.agentwatch/
+*.local.yaml
+
+# TypeScript sources (consumers use dist + .d.ts)
+packages/local/src/
+tsconfig*.json

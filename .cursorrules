@@ -1,0 +1,24 @@
+# AgentWatch V0 MVP 全局强制编码规范（Cursor生成所有代码自动遵守）
+## 1. 技术栈硬性锁定
+运行环境：TypeScript + Node.js >= 18
+本地持久存储：better-sqlite3
+云端API框架：Fastify
+统一测试工具：Vitest
+
+## 2. 接口契约（最高优先级，严禁违反）
+所有函数、结构体、入参出参，必须严格对齐 agentwatch_v0_mvp_tasklist.md 里全部TS定义；
+禁止私自新增、删除、修改字段名、函数名、类型结构；
+全局通用类型统一放在 packages/shared/types，优先复用文档标注「可直接使用」代码片段。
+
+## 3. 性能延迟硬性指标
+1. L0 Rule Engine 单次事件评估延迟 < 10ms
+2. L1 Statistical Engine 单次统计打分延迟 < 50ms
+所有检测逻辑入口必须使用 performance.now() 前后埋点，输出耗时日志。
+
+## 4. 统一异常处理规则
+所有捕获异常必须封装结构化Error，携带事件ID、风险类型、原始完整堆栈；
+禁止捕获异常后直接返回undefined、空值，不得吞掉报错。
+
+## 5. 测试强制要求
+1. 每个业务模块必须配套完整单元测试，覆盖正常、边界、异常场景；
+2. L1统计引擎全部数学算子（Z-score、log10突变、CUSUM、加权融合打分）必须编写benchmark基准测试，计算结果必须和架构文档示例完全匹配。
