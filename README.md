@@ -2,7 +2,9 @@
 
 > **定位**：部署在 AI Agent 与 MCP Server 之间的本地安全网关。拦截每一次 `tools/call`，在 **<50ms** 内完成 L0 规则 + L1 统计检测，输出 ALLOW / WARN / BLOCK 决策，并写入防篡改审计日志。
 
-**包名**：`@agentwatch-web3/cli` · **版本**：`0.1.1` · **Node.js** >= 18
+**包名**：`@agentwatch-web3/cli` · **版本**：`0.1.2` · **Node.js** >= 18
+
+> **0.1.2 修复**：`0.1.1` 线上包运行 `agentwatch-web3` 可能报 `ERR_MODULE_NOT_FOUND: commander`（运行时依赖未随包安装）。`0.1.2` 已将 `commander` 固定写入 `dependencies`，请升级：`npm install -g @agentwatch-web3/cli@0.1.2`
 
 ---
 
@@ -63,11 +65,11 @@ git clone <repo-url> agent-watch-v0 && cd agent-watch-v0
 npm install
 npm run build
 npm pack
-# 输出：agentwatch-web3-cli-0.1.1.tgz
+# 输出：agentwatch-web3-cli-0.1.2.tgz
 
 mkdir /tmp/aw-demo && cd /tmp/aw-demo
 npm init -y
-npm install /path/to/agentwatch-web3-cli-0.1.1.tgz
+npm install /path/to/agentwatch-web3-cli-0.1.2.tgz
 
 npx agentwatch-web3 --help
 ```
@@ -75,7 +77,7 @@ npx agentwatch-web3 --help
 ### 方式 B：全局安装（npm 已发布）
 
 ```bash
-npm install -g @agentwatch-web3/cli
+npm install -g @agentwatch-web3/cli@0.1.2
 agentwatch-web3 --help
 agentwatch-web3 init
 agentwatch-web3 audit verify
@@ -84,13 +86,13 @@ agentwatch-web3 audit verify
 ### 方式 C：npx 免安装调用
 
 ```bash
-npx @agentwatch-web3/cli agentwatch-web3 --help
-npx @agentwatch-web3/cli agentwatch-web3 init
-npx @agentwatch-web3/cli agentwatch-web3 audit verify
+npx @agentwatch-web3/cli@0.1.2 agentwatch-web3 --help
+npx @agentwatch-web3/cli@0.1.2 agentwatch-web3 init
+npx @agentwatch-web3/cli@0.1.2 agentwatch-web3 audit verify
 
 # 等价简写
-npx agentwatch-web3 --help
-npx agentwatch-web3 init
+npx agentwatch-web3@0.1.2 --help
+npx agentwatch-web3@0.1.2 init
 ```
 
 > CLI 主命令名：`agentwatch-web3`（兼容别名 `agentwatch`）。子命令：`init` / `proxy` / `status` / `logs` / `audit verify`。
