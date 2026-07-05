@@ -10,13 +10,13 @@ AgentWatch 部署在 AI Agent 与 MCP Server 之间，拦截每一次 `tools/cal
 
 ## 界面预览
 
-| 首页 | 登录 |
+| 首页 Hero | 登录 |
 |:---:|:---:|
-| ![首页](docs/screenshots/home.png) | ![登录](docs/screenshots/auth.png) |
+| ![首页 Hero](docs/screenshots/home.png) | ![登录](docs/screenshots/auth.png) |
 
-| Dashboard | 设置 |
-|:---:|:---:|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![设置](docs/screenshots/settings.png) |
+| Dashboard · 风险拦截详情 |
+|:---:|
+| ![Dashboard 风险拦截详情](docs/screenshots/dashboard.png) |
 
 Web 端支持 **GitHub 登录**、**Wallet（SIWE）** 与 **Demo 游客模式**（无需账号即可浏览 Dashboard 示例数据）。
 
