@@ -29,6 +29,8 @@ export interface EventUploaderConfig {
   endpoint: string;
   /** Bearer Token */
   apiKey: string;
+  /** CLI → Edge Function 上报密钥 */
+  uploadSecret?: string;
   /** 结构化日志 — 上报链路告警 */
   logger: Pick<ILogger, 'logAlert'>;
   /** 是否启用云端上报 — 默认 true */
@@ -76,6 +78,7 @@ function resolveConfig(
     dbPath: defaultAgentWatchDbPath(),
     endpoint: normalizeCloudEndpoint(cloudConfig.endpoint),
     apiKey: cloudConfig.apiKey ?? '',
+    ...(cloudConfig.uploadSecret ? { uploadSecret: cloudConfig.uploadSecret } : {}),
     logger: options.logger,
     enabled: cloudConfig.enabled,
     flushIntervalMs:
@@ -119,6 +122,9 @@ export class EventUploader {
           {
             endpoint: normalizeCloudEndpoint(options.cloudConfig.endpoint),
             apiKey: options.cloudConfig.apiKey ?? '',
+            ...(options.cloudConfig.uploadSecret
+              ? { uploadSecret: options.cloudConfig.uploadSecret }
+              : {}),
           },
           { logger: queueLogger },
         );
@@ -134,6 +140,7 @@ export class EventUploader {
         {
           endpoint: normalizeCloudEndpoint(config.endpoint),
           apiKey: config.apiKey,
+          ...(config.uploadSecret ? { uploadSecret: config.uploadSecret } : {}),
         },
         { logger: queueLogger },
       );

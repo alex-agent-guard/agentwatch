@@ -184,10 +184,15 @@ export interface CloudBatchConfig {
 
 export interface CloudConfig {
   enabled: boolean;
-  /** 上报 endpoint 基址 — POST /v1/events/batch */
+  /** 上报 endpoint 基址 — Supabase 项目 URL 或 legacy REST 基址 */
   endpoint: string;
-  /** API Key — 支持 ${AGENTWATCH_API_KEY} 环境变量替换 */
+  /**
+   * Edge Function 网关 anon key（仅调用 /functions/v1/upload-events，禁止直连 INSERT events）
+   * 支持 ${AGENTWATCH_API_KEY} 环境变量替换
+   */
   apiKey: string;
+  /** CLI 侧 upload_secret 明文 — 支持 ${AGENTWATCH_UPLOAD_SECRET} 环境变量替换 */
+  uploadSecret?: string;
   batch: CloudBatchConfig;
 }
 

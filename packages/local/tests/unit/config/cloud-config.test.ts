@@ -54,12 +54,26 @@ describe('cloud-config', () => {
     expect(config.enabled).toBe(false);
   });
 
-  it('parseCloudConfig disables upload when apiKey is empty', () => {
+  it('parseCloudConfig disables upload when apiKey is empty for legacy endpoint', () => {
     const config = parseCloudConfig(
       {
         enabled: true,
         endpoint: 'https://api.agentwatch.test/v1',
         apiKey: '',
+      },
+      {},
+      reader,
+    );
+    expect(config.enabled).toBe(false);
+  });
+
+  it('parseCloudConfig disables Supabase upload when uploadSecret is empty', () => {
+    const config = parseCloudConfig(
+      {
+        enabled: true,
+        endpoint: 'https://abc.supabase.co',
+        apiKey: 'anon-key',
+        uploadSecret: '',
       },
       {},
       reader,
@@ -80,12 +94,13 @@ describe('cloud-config', () => {
     expect(config.enabled).toBe(false);
   });
 
-  it('parseCloudConfig returns enabled config when all fields are valid', () => {
+  it('parseCloudConfig returns enabled Supabase config when uploadSecret is set', () => {
     const config = parseCloudConfig(
       {
         enabled: true,
-        endpoint: 'https://api.agentwatch.io/v1',
-        apiKey: 'aw_api_xxx',
+        endpoint: 'https://abc.supabase.co',
+        apiKey: 'anon-key',
+        uploadSecret: 'aw_test_secret',
         batch: { batchSize: 50, flushIntervalMs: 3000 },
       },
       {},
@@ -94,25 +109,26 @@ describe('cloud-config', () => {
 
     expect(config).toEqual({
       enabled: true,
-      endpoint: 'https://api.agentwatch.io/v1',
-      apiKey: 'aw_api_xxx',
+      endpoint: 'https://abc.supabase.co',
+      apiKey: 'anon-key',
+      uploadSecret: 'aw_test_secret',
       batch: { batchSize: 50, flushIntervalMs: 3000 },
     });
   });
 
-  it('parseCloudConfig prefers AGENTWATCH_API_KEY env over yaml apiKey', () => {
+  it('parseCloudConfig prefers AGENTWATCH_UPLOAD_SECRET env over yaml', () => {
     const config = parseCloudConfig(
       {
         enabled: true,
-        endpoint: 'https://api.agentwatch.io/v1',
-        apiKey: 'yaml-key',
+        endpoint: 'https://abc.supabase.co',
+        uploadSecret: 'yaml-secret',
       },
-      { AGENTWATCH_API_KEY: 'env-key' },
+      { AGENTWATCH_UPLOAD_SECRET: 'env-secret', AGENTWATCH_API_KEY: 'anon' },
       reader,
     );
 
     expect(config.enabled).toBe(true);
-    expect(config.apiKey).toBe('env-key');
+    expect(config.uploadSecret).toBe('env-secret');
   });
 
   it('createDisabledCloudConfig always sets enabled=false', () => {

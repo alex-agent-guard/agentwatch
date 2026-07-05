@@ -2,7 +2,7 @@
  * Async Logger — 异步队列缓冲、分层落盘、JSON Lines 持久化
  * 契约：api.types ILogger + logging.types BehaviorLogEntry
  */
-import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -115,6 +115,7 @@ export class AsyncLogger implements ILogger {
           dbPath,
           endpoint: config.endpoint,
           apiKey: config.apiKey ?? '',
+          ...(config.uploadSecret ? { uploadSecret: config.uploadSecret } : {}),
           logger: this,
           enabled: config.enabled,
           flushIntervalMs: config.batch.flushIntervalMs,
@@ -926,6 +927,15 @@ export class AsyncLogger implements ILogger {
       const parentDir = dirname(resolved);
       if (!existsSync(parentDir)) {
         mkdirSync(parentDir, { recursive: true });
+      }
+      if (existsSync(resolved) && statSync(resolved).isDirectory()) {
+        throw this.createStructuredError(
+          `Log output path is a directory, expected file: ${resolved}. ` +
+            'Run: agentwatch-web3 init',
+          null,
+          RiskType.ASYNC_LOGGER_INIT_FAILED,
+          new Error('EISDIR: log path is directory'),
+        );
       }
       return { root: resolved, isSingleFile: true };
     }

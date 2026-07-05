@@ -1,0 +1,6 @@
+# AgentWatch — Supabase local/deploy config (Edge Functions)
+# Deploy: supabase functions deploy upload-events --no-verify-jwt
+# Auth is enforced by ingest_events_with_secret RPC + upload_secret, not JWT.
+
+[functions.upload-events]
+verify_jwt = false

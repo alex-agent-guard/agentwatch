@@ -12,8 +12,8 @@ export const DEFAULT_MAX_MATCH_TIME_MS = 10;
 /** L1 StatEngine 单次 processEvent 延迟上限 — task_l1_engine.md L1-ENG-01 */
 export const DEFAULT_MAX_PROCESS_TIME_MS = 10;
 
-/** DecisionRouter 单次决策延迟预算 — task_router_logger_structure.md DR-001 */
-export const DEFAULT_DECISION_BUDGET_MS = 1;
+/** DecisionRouter 单次决策延迟预算 — task_router_logger_structure.md DR-001（与 L0 match 预算对齐） */
+export const DEFAULT_DECISION_BUDGET_MS = 10;
 
 /** AsyncLogger 单次同步写入延迟预算 — task_router_logger_structure.md AL-002 */
 export const DEFAULT_WRITE_BUDGET_MS = 10;
@@ -135,7 +135,7 @@ export const DEFAULT_LOG_MASK_CONFIG = {
 /** cloud 默认配置 — config.yaml cloud 节点 / ConfigManager 降级回退 */
 export const DEFAULT_CLOUD_CONFIG = {
   enabled: true,
-  endpoint: 'https://api.agentwatch.io/v1',
+  endpoint: 'https://kbjcikgoawxhotwwqtin.supabase.co',
   apiKey: '',
   batch: {
     batchSize: 100,
@@ -240,6 +240,7 @@ export const DEDICATED_ENV_KEYS = [
   'OKX_API_KEY',
   'OKX_SECRET_KEY',
   'AGENTWATCH_API_KEY',
+  'AGENTWATCH_UPLOAD_SECRET',
   'OKX_PASSPHRASE',
 ] as const;
 

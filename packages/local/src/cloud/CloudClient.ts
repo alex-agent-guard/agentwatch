@@ -6,6 +6,11 @@ import { RiskType } from '@packages/shared/constants';
 
 import type { ILogger } from '@packages/shared/types';
 
+import {
+  isSupabaseEndpoint,
+  uploadBatchToSupabase,
+} from './supabaseCloudTransport.js';
+
 /**
  * 云端上报单条事件载荷 — POST /v1/events/batch body.events[]
  * 所有敏感字段须提前脱敏；hmac 由 HMACChain 在入队前写入
@@ -71,10 +76,12 @@ export interface CloudBatchUploadResult {
 }
 
 export interface CloudClientConfig {
-  /** API 基址 — 不含尾部斜杠，如 https://api.agentwatch.io */
+  /** API 基址 — Supabase 项目 URL 或 legacy REST 基址 */
   endpoint: string;
-  /** Bearer Token */
+  /** Edge Function 网关 anon key 或 legacy Bearer token */
   apiKey: string;
+  /** Supabase 上报 upload_secret — 必填（Supabase endpoint 时） */
+  uploadSecret?: string;
 }
 
 type CloudClientLogger = Pick<ILogger, 'logAlert'>;
@@ -91,6 +98,7 @@ export interface CloudClientOptions {
 export class CloudClient {
   private endpoint: string;
   private apiKey: string;
+  private uploadSecret: string;
   private timeoutMs = 5000;
   private readonly fetchImpl: typeof fetch;
   private readonly logger: CloudClientLogger | null;
@@ -98,6 +106,7 @@ export class CloudClient {
   constructor(config: CloudClientConfig, options?: CloudClientOptions) {
     this.endpoint = config.endpoint.replace(/\/$/, '');
     this.apiKey = config.apiKey;
+    this.uploadSecret = config.uploadSecret ?? '';
     if (options?.timeoutMs !== undefined) {
       this.timeoutMs = options.timeoutMs;
     }
@@ -109,6 +118,30 @@ export class CloudClient {
    * 批量上传事件 — 失败时记录 AsyncLogger 告警并返回 null，不向外抛错
    */
   async uploadBatch(events: CloudEventPayload[]): Promise<CloudBatchUploadResult | null> {
+    if (events.length === 0) {
+      return { batchId: 'empty', accepted: 0, rejected: 0, errors: [] };
+    }
+
+    try {
+      if (isSupabaseEndpoint(this.endpoint)) {
+        return await uploadBatchToSupabase(events, {
+          endpoint: this.endpoint,
+          apiKey: this.apiKey,
+          uploadSecret: this.uploadSecret,
+          timeoutMs: this.timeoutMs,
+          fetchImpl: this.fetchImpl,
+        });
+      }
+
+      return await this.uploadBatchLegacy(events);
+    } catch (cause) {
+      this.recordUploadError(cause, events[0]?.eventId);
+      return null;
+    }
+  }
+
+  /** 原有 POST /v1/events/batch 协议 — 非 Supabase endpoint 时使用 */
+  private async uploadBatchLegacy(events: CloudEventPayload[]): Promise<CloudBatchUploadResult | null> {
     try {
       const res = await this.fetchImpl(`${this.endpoint}/v1/events/batch`, {
         method: 'POST',

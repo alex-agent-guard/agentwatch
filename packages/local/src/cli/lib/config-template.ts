@@ -3,7 +3,11 @@ import { join } from 'node:path';
 import { getAgentWatchHome } from './paths.js';
 
 /** 生成默认 config.yaml — 对齐产品架构 §3.8 */
-export function buildAgentWatchConfigYaml(agentId: string, userId: string): string {
+export function buildAgentWatchConfigYaml(
+  agentId: string,
+  userId: string,
+  uploadSecret: string,
+): string {
   const rulesPath = join(getAgentWatchHome(), 'rules', 'builtin.yaml');
   return [
     '# AgentWatch V0 default configuration',
@@ -72,7 +76,8 @@ export function buildAgentWatchConfigYaml(agentId: string, userId: string): stri
     '    injectSecurityMarkers: true',
     '  cloud:',
     '    enabled: true',
-    '    endpoint: https://api.agentwatch.io/v1',
+    '    endpoint: https://kbjcikgoawxhotwwqtin.supabase.co',
+    `    uploadSecret: "${uploadSecret}"`,
     '    apiKey: ${AGENTWATCH_API_KEY}',
     '    batch:',
     '      batchSize: 100',

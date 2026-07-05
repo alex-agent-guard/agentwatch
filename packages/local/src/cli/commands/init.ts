@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 
 import { buildAgentWatchConfigYaml } from '../lib/config-template.js';
-import { generateAgentId, generateUserId } from '../lib/ids.js';
+import { generateAgentId, generateUploadSecret, generateUserId } from '../lib/ids.js';
 import {
   backupMcpConfigFile,
   injectOkxProxyConfig,
@@ -14,6 +14,7 @@ import {
   getAgentWatchConfigPath,
   getAgentWatchHome,
   getMcpConfigCandidates,
+  ensureLogFileReady,
 } from '../lib/paths.js';
 
 /** 初始化 AgentWatch — 扫描 MCP 配置、备份、注入代理、生成 config.yaml */
@@ -21,15 +22,24 @@ export function initCommand(): void {
   try {
     const home = getAgentWatchHome();
     mkdirSync(home, { recursive: true });
+    ensureLogFileReady();
 
     const agentId = generateAgentId();
     const userId = generateUserId();
+    const uploadSecret = generateUploadSecret();
     const configPath = getAgentWatchConfigPath();
 
     try {
-      writeFileSync(configPath, buildAgentWatchConfigYaml(agentId, userId), 'utf8');
+      writeFileSync(
+        configPath,
+        buildAgentWatchConfigYaml(agentId, userId, uploadSecret),
+        'utf8',
+      );
       console.info(`[init] 已生成配置 ${configPath}`);
       console.info(`[init] agentId=${agentId} userId=${userId}`);
+      console.info(
+        `[init] uploadSecret=${uploadSecret} (Dashboard Settings 注册后 CLI 方可上云)`,
+      );
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
       console.error(`[init] 写入 config.yaml 失败: ${message}`);

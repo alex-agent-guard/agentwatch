@@ -14,3 +14,7 @@ packages/local/logs/
 *.db-journal
 *.db-wal
 *.db-shm
+
+# Large web video assets (host separately or use LFS)
+packages/web/public/assets/videos/*.mp4
+packages/web/public/assets/videos/*.mov

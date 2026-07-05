@@ -9,3 +9,8 @@ export function generateAgentId(): string {
 export function generateUserId(): string {
   return `usr_${randomBytes(6).toString('hex')}`;
 }
+
+/** 生成 CLI 上报 upload_secret — 格式 aw_<base64url> */
+export function generateUploadSecret(): string {
+  return `aw_${randomBytes(24).toString('base64url')}`;
+}

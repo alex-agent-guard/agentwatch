@@ -227,4 +227,21 @@ describe('CLI logs', () => {
     warnSpy.mockRestore();
     process.env['HOME'] = previousHome;
   });
+
+  it('logsCommand errors when log path is a directory', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const previousHome = process.env['HOME'];
+    const fakeHome = mkdtempSync(join(tmpdir(), 'agentwatch-cli-logs-dir-'));
+    process.env['HOME'] = fakeHome;
+    mkdirSync(join(fakeHome, '.agentwatch'), { recursive: true });
+    mkdirSync(join(fakeHome, '.agentwatch', 'log.jsonl'));
+
+    logsCommand({ tail: '10' });
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('日志路径是目录而非文件'),
+    );
+    errorSpy.mockRestore();
+    process.env['HOME'] = previousHome;
+  });
 });

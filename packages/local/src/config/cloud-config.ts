@@ -5,6 +5,8 @@ import { DEFAULT_CLOUD_CONFIG } from '@packages/shared/constants';
 
 import type { CloudConfig } from '@packages/shared/types';
 
+import { isSupabaseEndpoint } from '../cloud/supabaseCloudTransport.js';
+
 type CloudConfigReader = {
   readOptionalBoolean: (raw: Record<string, unknown>, key: string) => boolean | undefined;
   readOptionalString: (raw: Record<string, unknown>, key: string) => string | undefined;
@@ -18,12 +20,13 @@ type CloudConfigReader = {
 
 /** 禁用态 cloud 配置 — 占位 endpoint/apiKey，enabled=false */
 export function createDisabledCloudConfig(
-  overrides?: Partial<Pick<CloudConfig, 'endpoint' | 'apiKey'>>,
+  overrides?: Partial<Pick<CloudConfig, 'endpoint' | 'apiKey' | 'uploadSecret'>>,
 ): CloudConfig {
   return {
     enabled: false,
     endpoint: overrides?.endpoint ?? DEFAULT_CLOUD_CONFIG.endpoint,
     apiKey: overrides?.apiKey ?? DEFAULT_CLOUD_CONFIG.apiKey,
+    ...(overrides?.uploadSecret !== undefined ? { uploadSecret: overrides.uploadSecret } : {}),
     batch: {
       batchSize: DEFAULT_CLOUD_CONFIG.batch.batchSize,
       flushIntervalMs: DEFAULT_CLOUD_CONFIG.batch.flushIntervalMs,
@@ -47,7 +50,7 @@ export function isValidCloudEndpoint(endpoint: string): boolean {
 }
 
 /**
- * 解析 cloud YAML 节点 — 缺失/非法/apiKey 为空时返回 enabled=false，不抛错
+ * 解析 cloud YAML 节点 — 缺失/非法/uploadSecret 为空时返回 enabled=false，不抛错
  */
 export function parseCloudConfig(
   raw: Record<string, unknown>,
@@ -66,6 +69,9 @@ export function parseCloudConfig(
     const endpointExplicit = reader.readOptionalString(raw, 'endpoint');
     const endpointRaw = endpointExplicit ?? DEFAULT_CLOUD_CONFIG.endpoint;
     const apiKey = (env.AGENTWATCH_API_KEY ?? reader.readOptionalString(raw, 'apiKey') ?? '').trim();
+    const uploadSecret = (
+      env.AGENTWATCH_UPLOAD_SECRET ?? reader.readOptionalString(raw, 'uploadSecret') ?? ''
+    ).trim();
 
     const batchRaw = reader.readRecord(raw, 'batch', {});
     const batchSize =
@@ -86,25 +92,41 @@ export function parseCloudConfig(
       ...(maxRetries !== undefined ? { maxRetries } : {}),
     };
 
+    const base = {
+      endpoint: endpointRaw,
+      apiKey,
+      batch,
+      ...(uploadSecret.length > 0 ? { uploadSecret } : {}),
+    };
+
     if (!enabled) {
-      return {
-        enabled: false,
-        endpoint: endpointRaw,
-        apiKey,
-        batch,
-      };
+      return { enabled: false, ...base };
     }
 
     if (endpointExplicit === undefined || endpointExplicit.trim().length === 0) {
       console.warn('[ConfigManager] cloud.endpoint is missing, cloud upload disabled');
-      return createDisabledCloudConfig({ endpoint: endpointRaw, apiKey });
+      return createDisabledCloudConfig({ endpoint: endpointRaw, apiKey, uploadSecret });
     }
 
     if (!isValidCloudEndpoint(endpointExplicit)) {
       console.warn(
         `[ConfigManager] invalid cloud.endpoint="${endpointExplicit}", cloud upload disabled`,
       );
-      return createDisabledCloudConfig({ endpoint: endpointExplicit, apiKey });
+      return createDisabledCloudConfig({ endpoint: endpointExplicit, apiKey, uploadSecret });
+    }
+
+    if (isSupabaseEndpoint(endpointExplicit)) {
+      if (uploadSecret.length === 0) {
+        console.warn('[CloudUpload] AGENTWATCH_UPLOAD_SECRET missing — cloud upload disabled');
+        return createDisabledCloudConfig({ endpoint: endpointRaw, apiKey });
+      }
+      return {
+        enabled: true,
+        endpoint: endpointExplicit,
+        apiKey,
+        uploadSecret,
+        batch,
+      };
     }
 
     if (apiKey.length === 0) {
@@ -117,6 +139,7 @@ export function parseCloudConfig(
       endpoint: endpointExplicit,
       apiKey,
       batch,
+      ...(uploadSecret.length > 0 ? { uploadSecret } : {}),
     };
   } catch (cause) {
     const detail = cause instanceof Error ? cause.message : String(cause);

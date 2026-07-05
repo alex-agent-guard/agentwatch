@@ -2,8 +2,10 @@
 
 > **复查基准**：`docs/产品架构完整版.md`（V0 MVP §3–§7、§10–§11）  
 > **辅助文档**：`agentwatch_v0_mvp_tasklist.md`、各 `task_*.md`、`v0-freeze-report.md`  
-> **复查时间**：2026-07-04  
-> **代码快照**：`@agentwatch-web3/cli@0.1.0`，测试 **281 passed / 2 skipped**
+> **复查时间**：2026-07-04（初版）· **2026-07-06 增补** Phase 4 Dashboard 闭环  
+> **代码快照**：`@agentwatch-web3/cli@0.1.2`，测试 **299 passed / 2 skipped**
+
+> **2026-07-06 增补**：Phase 4 已打通 Supabase Edge Function 上报 + Web Login/Dashboard。As-Built 详见 [产品架构 §V0 As-Built](产品架构完整版.md#v0-as-built-自检快照2026-07-06)。下文 §一–§二 仍以 CLI 核心为准；云端协议由 legacy `/v1/events/batch` 更新为 `upload-events` + `upload_secret`。
 
 ---
 
@@ -47,7 +49,7 @@
 | stdio JSON-RPC 代理 | P0 | `MCPProxyCore` + spawn 下游 | ✅ | `--` 下游参数 + `--config` 覆盖 |
 | tools/call 拦截 | P0 | L0/L1 后决策 ALLOW/BLOCK/WARN | ✅ | 不转发 BLOCK |
 | 安全标记注入 | 可选 | `injectSecurityMarkers` | ✅ | |
-| 云端 HTTP 批量上报 | P1 推荐 | `CloudClient` POST `/v1/events/batch` | ⚡ | V0 路线图标 P1，**已实现** |
+| 云端 HTTP 批量上报 | P1 推荐 | Edge Function `upload-events` + `upload_secret` | ⚡ | Phase 4 落地；非 legacy `/v1/events/batch` |
 | 5s 定时 flush | 批量 | `EventUploader` 5000ms | ✅ | E2E Scenario B |
 | 断网队列持久化 | 不丢事件 | `RetryQueue` → SQLite | ✅ | |
 | ALLOW 不上报 | 过滤 | `EventUploader.enqueue` 过滤 | ✅ | 仅 BLOCK/WARN |
@@ -283,8 +285,8 @@ sqlite3 ~/.agentwatch/agentwatch.db ".tables"
 
 ### 最终结论
 
-**AgentWatch V0 `@agentwatch-web3/cli@0.1.0` 满足黑客松 MVP 交付标准。**  
-架构 V0 P0 能力完整；多项 V1 能力已超前落地；性能核心路径达标；文档与 README 已同步至当前实现状态。
+**AgentWatch V0 `@agentwatch-web3/cli@0.1.2` 满足黑客松 MVP + Phase 4 Dashboard 闭环交付标准。**  
+架构 V0 P0 能力完整；Phase 4 增补 Supabase 上报与 Web 读路径；性能核心路径达标；README 与产品架构 As-Built 节已同步至 2026-07-06。
 
 ---
 
@@ -297,4 +299,5 @@ sqlite3 ~/.agentwatch/agentwatch.db ".tables"
 | [e2e_full_pipeline.md](./e2e_full_pipeline.md) | E2E 场景说明 |
 | [npm_pack_verify.md](./npm_pack_verify.md) | 打包安装验收 |
 | [operation_troubleshoot.md](./operation_troubleshoot.md) | 运维排查 |
-| [agentwatch_v0_mvp_tasklist.md](./agentwatch_v0_mvp_tasklist.md) | 63 项任务清单 |
+| [phase_d_dashboard_runbook.md](./phase_d_dashboard_runbook.md) | Dashboard 三终端演示 |
+| [supabase/DEPLOY_LOGIN.md](./supabase/DEPLOY_LOGIN.md) | Login + Edge Function 部署 |

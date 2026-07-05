@@ -854,6 +854,10 @@ function mergeEnvIntoRaw(
     cloud['apiKey'] = env.AGENTWATCH_API_KEY;
     cloned['cloud'] = cloud;
   }
+  if (env.AGENTWATCH_UPLOAD_SECRET !== undefined) {
+    cloud['uploadSecret'] = env.AGENTWATCH_UPLOAD_SECRET;
+    cloned['cloud'] = cloud;
+  }
 
   const serverEnv = readRecord(readRecord(cloned, 'server', {}), 'env', {});
   if (env.OKX_API_KEY !== undefined) {
@@ -1224,7 +1228,7 @@ function buildDefaultYamlTemplate(): string {
     '    injectSecurityMarkers: true',
     '  cloud:',
     '    enabled: true',
-    '    endpoint: https://api.agentwatch.io/v1',
+    '    endpoint: https://kbjcikgoawxhotwwqtin.supabase.co/rest/v1/',
     '    apiKey: ${AGENTWATCH_API_KEY}',
     '    batch:',
     '      batchSize: 100',

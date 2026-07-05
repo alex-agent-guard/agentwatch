@@ -1,4 +1,4 @@
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -9,7 +9,17 @@ import {
   normalizeCloudEndpoint,
   type CloudEventPayload,
 } from '../../../src/cloud/CloudClient.js';
+import { sampleCloudEvent } from './cloudTestFixtures.js';
 import { toCloudEventPayload } from '../../../src/cloud/cloudEventMapper.js';
+import {
+  isSupabaseEndpoint,
+  readConfigAgentId,
+  resolveInstallIdFromBatch,
+  resolveSupabaseProjectOrigin,
+  resolveSupabaseRestV1Base,
+  resolveSupabaseUploadUrl,
+  toSupabaseInsertRows,
+} from '../../../src/cloud/supabaseCloudTransport.js';
 import { EventUploader } from '../../../src/cloud/EventUploader.js';
 import { RetryQueue } from '../../../src/cloud/RetryQueue.js';
 import { AsyncLogger } from '../../../src/logging/AsyncLogger.js';
@@ -17,34 +27,6 @@ import { DatabaseManager } from '../../../src/storage/DatabaseManager.js';
 import { RiskType } from '@packages/shared/constants';
 
 import type { BehaviorLogEntry, CloudConfig } from '@packages/shared/types';
-
-function sampleCloudEvent(overrides?: Partial<CloudEventPayload>): CloudEventPayload {
-  return {
-    eventId: overrides?.eventId ?? `evt-${String(Date.now())}`,
-    sessionId: overrides?.sessionId ?? 'sess-1',
-    timestamp: overrides?.timestamp ?? Date.now(),
-    agentId: overrides?.agentId ?? 'agent-1',
-    userId: overrides?.userId ?? 'user-1',
-    toolCall: overrides?.toolCall ?? {
-      toolName: 'transfer',
-      serviceName: 'tools/call',
-      durationMs: 12,
-      argCount: 1,
-      argKeyHashes: ['abcd1234'],
-      argValueTypes: ['int'],
-      hasAddress: false,
-      hasAmount: true,
-      amountBucket: 'lt_10k',
-    },
-    detection: overrides?.detection ?? {
-      l0TriggeredRules: [],
-      l1CombinedScore: 0.9,
-      finalDecision: 'BLOCK',
-    },
-    context: overrides?.context ?? { chainDepth: 1 },
-    hmac: overrides?.hmac ?? 'a'.repeat(64),
-  };
-}
 
 function sampleEntry(overrides?: Partial<BehaviorLogEntry>): BehaviorLogEntry {
   return {
@@ -235,6 +217,120 @@ describe('CloudClient', () => {
     expect(normalizeCloudEndpoint('https://api.agentwatch.test/v1/')).toBe(
       'https://api.agentwatch.test',
     );
+  });
+});
+
+describe('Supabase cloud transport', () => {
+  it('isSupabaseEndpoint detects supabase.co host', () => {
+    expect(isSupabaseEndpoint('https://abc.supabase.co/rest/v1')).toBe(true);
+    expect(isSupabaseEndpoint('https://api.agentwatch.test')).toBe(false);
+  });
+
+  it('resolveSupabaseRestV1Base restores /v1 after normalize', () => {
+    expect(
+      resolveSupabaseRestV1Base('https://abc.supabase.co/rest/v1/'),
+    ).toBe('https://abc.supabase.co/rest/v1');
+    expect(resolveSupabaseRestV1Base('https://abc.supabase.co/rest')).toBe(
+      'https://abc.supabase.co/rest/v1',
+    );
+  });
+
+  it('uploadBatch posts to Edge Function with upload_secret', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ accepted: 1 }),
+    });
+
+    const client = new CloudClient(
+      {
+        endpoint: 'https://kbjcikgoawxhotwwqtin.supabase.co',
+        apiKey: 'anon-key',
+        uploadSecret: 'aw_test_upload_secret_1234567890',
+      },
+      { fetchImpl },
+    );
+
+    const event = sampleCloudEvent({ eventId: 'evt-sb-1', agentId: 'my-install' });
+    const result = await client.uploadBatch([event]);
+
+    expect(result?.accepted).toBe(1);
+    expect(fetchImpl).toHaveBeenCalledOnce();
+
+    const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(
+      resolveSupabaseUploadUrl('https://kbjcikgoawxhotwwqtin.supabase.co'),
+    );
+    expect(init.method).toBe('POST');
+
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Authorization']).toBe('Bearer anon-key');
+    expect(headers['apikey']).toBe('anon-key');
+
+    const body = JSON.parse(String(init.body)) as {
+      install_id: string;
+      upload_secret: string;
+      events: Array<Record<string, unknown>>;
+    };
+    expect(body.install_id).toBe('my-install');
+    expect(body.upload_secret).toBe('aw_test_upload_secret_1234567890');
+    expect(body.events).toHaveLength(1);
+    expect(body.events[0]?.['event_id']).toBe('evt-sb-1');
+    expect(body.events[0]?.['final_decision']).toBe('BLOCK');
+    expect(body.events[0]).not.toHaveProperty('risk_level');
+  });
+
+  it('resolveInstallIdFromBatch falls back to config agentId when payload is default', () => {
+    const previousHome = process.env['HOME'];
+    process.env['HOME'] = mkdtempSync(join(tmpdir(), 'agentwatch-sb-install-'));
+    try {
+      const configDir = join(process.env['HOME']!, '.agentwatch');
+      mkdirSync(configDir, { recursive: true });
+      writeFileSync(
+        join(configDir, 'config.yaml'),
+        'agentId: "agent_from_config"\n',
+        'utf8',
+      );
+
+      expect(readConfigAgentId()).toBe('agent_from_config');
+      expect(
+        resolveInstallIdFromBatch([sampleCloudEvent({ agentId: 'default' })]),
+      ).toBe('agent_from_config');
+
+      const rows = toSupabaseInsertRows(
+        [sampleCloudEvent({ agentId: 'default' })],
+        'agent_from_config',
+      );
+      expect(rows[0]?.install_id).toBe('agent_from_config');
+      expect(rows[0]?.agent_id).toBe('agent_from_config');
+      expect(rows[0]).not.toHaveProperty('risk_level');
+    } finally {
+      if (previousHome === undefined) {
+        delete process.env['HOME'];
+      } else {
+        process.env['HOME'] = previousHome;
+      }
+    }
+  });
+
+  it('uploadBatch returns null on Supabase HTTP error', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => 'JWT expired',
+    });
+
+    const client = new CloudClient(
+      {
+        endpoint: 'https://abc.supabase.co',
+        apiKey: 'bad-key',
+        uploadSecret: 'aw_bad_secret_123456789012345',
+      },
+      { fetchImpl },
+    );
+
+    const result = await client.uploadBatch([sampleCloudEvent()]);
+    expect(result).toBeNull();
   });
 });
 

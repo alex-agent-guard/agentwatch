@@ -24,7 +24,13 @@
     "bench": "npm run bench --prefix packages/local",
     "pack:verify": "npm run build && PACK_VERIFY=1 npm run test:pack --prefix packages/local",
     "prepublishOnly": "npm run build",
-    "start": "npm run start --prefix packages/local"
+    "start": "npm run start --prefix packages/local",
+    "proxy:demo": "bash scripts/phase-d-proxy.sh",
+    "fifo:demo": "bash scripts/phase-d-fifo-call.sh",
+    "fifo:block": "bash scripts/phase-d-fifo-call.sh block-only",
+    "test:cases": "bash scripts/phase-d-test-cases.sh list",
+    "test:dashboard": "bash scripts/phase-d-test-cases.sh dashboard-demo",
+    "test:all-db": "bash scripts/phase-d-test-cases.sh all-dashboard"
   },
   "keywords": [
     "mcp",

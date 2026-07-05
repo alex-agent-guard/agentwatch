@@ -6,7 +6,11 @@ import {
   readLogEntries,
   readLogIncrement,
 } from '../lib/log-reader.js';
-import { getAgentWatchLogPath } from '../lib/paths.js';
+import {
+  getAgentWatchHome,
+  getAgentWatchLogPath,
+  LOG_PATH_IS_DIRECTORY_HINT,
+} from '../lib/paths.js';
 
 /** logs 子命令选项 — commander 解析结果 */
 export interface LogsCommandOptions {
@@ -46,6 +50,13 @@ export function logsCommand(options: LogsCommandOptions): void {
     if (!existsSync(logPath)) {
       console.warn(
         `[logs] 日志文件不存在: ${logPath}\n请先运行检测网关产生 BLOCK/WARN 事件，或检查 logging.output 配置。`,
+      );
+      return;
+    }
+
+    if (statSync(logPath).isDirectory()) {
+      console.error(
+        `[logs] 日志路径是目录而非文件: ${logPath}\n${LOG_PATH_IS_DIRECTORY_HINT}`,
       );
       return;
     }

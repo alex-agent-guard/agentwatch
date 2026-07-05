@@ -645,6 +645,7 @@ async function assembleGateway(): Promise<GatewayRuntime> {
     warnThreshold: thresholds.decisionRouter.warnThreshold,
     ruleWeight: thresholds.decisionRouter.ruleWeight,
     statWeight: thresholds.decisionRouter.statWeight,
+    decisionBudgetMs: thresholds.ruleEngine.maxMatchTimeMs,
   });
 
   const cloudConfig = configManager.getCloudConfig();
