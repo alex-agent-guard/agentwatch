@@ -3828,6 +3828,135 @@ code,
   }
 }
 
+/* ─── Loop video + cinematic fallback ─── */
+
+.loop-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.loop-video__clip {
+  z-index: 1;
+}
+
+.loop-video__fallback {
+  z-index: 0;
+}
+
+.cine-fallback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #06080e;
+}
+
+.cine-fallback__mesh {
+  position: absolute;
+  inset: -20%;
+  animation: cine-mesh-drift 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+.cine-fallback__stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.75) 0, transparent 100%),
+    radial-gradient(1px 1px at 78% 24%, rgba(255, 255, 255, 0.5) 0, transparent 100%),
+    radial-gradient(1.5px 1.5px at 44% 62%, rgba(255, 255, 255, 0.65) 0, transparent 100%),
+    radial-gradient(1px 1px at 88% 72%, rgba(255, 255, 255, 0.4) 0, transparent 100%),
+    radial-gradient(1px 1px at 22% 84%, rgba(255, 255, 255, 0.35) 0, transparent 100%),
+    radial-gradient(1px 1px at 56% 12%, rgba(255, 255, 255, 0.45) 0, transparent 100%);
+  animation: cine-stars-twinkle 6s ease-in-out infinite;
+}
+
+.cine-fallback__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.cine-fallback--hero .cine-fallback__mesh {
+  background:
+    radial-gradient(ellipse 55% 70% at 58% 42%, rgba(214, 168, 142, 0.38) 0%, transparent 62%),
+    radial-gradient(ellipse 45% 55% at 72% 58%, rgba(120, 90, 180, 0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 80% 60% at 40% 80%, rgba(20, 40, 80, 0.45) 0%, transparent 55%),
+    linear-gradient(155deg, #0a0c14 0%, #141018 45%, #080a10 100%);
+}
+
+.cine-fallback--auth .cine-fallback__mesh {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(120, 180, 255, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 30% 70%, rgba(80, 200, 160, 0.18) 0%, transparent 50%),
+    linear-gradient(180deg, #1a2838 0%, #0e1620 55%, #060a10 100%);
+}
+
+.cine-fallback--discover .cine-fallback__mesh {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(61, 214, 180, 0.32) 0%, transparent 52%),
+    radial-gradient(circle at 80% 70%, rgba(41, 121, 255, 0.22) 0%, transparent 48%),
+    linear-gradient(165deg, #0c1420 0%, #060a12 100%);
+}
+
+.cine-fallback--intercept .cine-fallback__mesh {
+  background:
+    radial-gradient(circle at 45% 50%, rgba(255, 160, 90, 0.28) 0%, transparent 50%),
+    radial-gradient(circle at 70% 65%, rgba(255, 90, 70, 0.18) 0%, transparent 45%),
+    linear-gradient(160deg, #141018 0%, #0a0808 100%);
+}
+
+.cine-fallback--audit .cine-fallback__mesh {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(80, 160, 255, 0.3) 0%, transparent 52%),
+    radial-gradient(circle at 65% 75%, rgba(61, 214, 140, 0.15) 0%, transparent 48%),
+    linear-gradient(165deg, #0a1018 0%, #060810 100%);
+}
+
+.cine-fallback--protection .cine-fallback__mesh {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(61, 214, 140, 0.22) 0%, transparent 52%),
+    radial-gradient(circle at 70% 60%, rgba(41, 121, 255, 0.2) 0%, transparent 48%),
+    linear-gradient(165deg, #0e1624 0%, #060a12 100%);
+  animation: protect-visual-breathe 4.5s ease-in-out infinite;
+}
+
+.auth-bg__cine-fallback {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes cine-mesh-drift {
+  0%,
+  100% {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.06) translate3d(-1.5%, -1%, 0);
+  }
+}
+
+@keyframes cine-stars-twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cine-fallback__mesh,
+  .cine-fallback__stars {
+    animation: none;
+  }
+}
+
 /* ─── Auth page ─── */
 
 .auth-bg__video {

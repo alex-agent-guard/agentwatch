@@ -209,6 +209,7 @@ GitHub 导入后：**push `main` 且改动 `packages/web/**` → Vercel 自动 P
 
 ## 六、商用检查清单
 
+- [ ] `videos/web/` 压缩版已 push（或配 `VITE_VIDEO_CDN_BASE`）  
 - [ ] 自有域名 HTTPS 有效  
 - [ ] Vercel Root Directory = `packages/web`  
 - [ ] 环境变量三件套（`VITE_USE_MOCK=false` 等）  
@@ -225,6 +226,7 @@ GitHub 导入后：**push `main` 且改动 `packages/web/**` → Vercel 自动 P
 
 | 现象 | 处理 |
 |------|------|
+| **首页黑屏、无背景视频** | 确认 `packages/web/public/assets/videos/web/` 已提交；或运行 `bash scripts/compress-web-videos.sh` 后 push |
 | 白屏 / 资源 404 | Root Directory 必须是 `packages/web`；Redeploy |
 | GitHub 登录跳回失败 | Supabase Redirect URLs 缺生产域名；保存后硬刷新 |
 | 登录成功但无激活页 | 该 GitHub 已兑过码；换账号测 |

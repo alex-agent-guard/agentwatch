@@ -10,6 +10,8 @@ export default function SpaceHeroBackground() {
         opacity={0.95}
         objectPosition="55% center"
         playbackRate={0.9}
+        fallbackVariant="hero"
+        className="absolute inset-0"
       />
 
       <div

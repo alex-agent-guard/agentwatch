@@ -19,6 +19,9 @@ packages/local/logs/
 # Large web video assets (host separately or use LFS)
 packages/web/public/assets/videos/*.mp4
 packages/web/public/assets/videos/*.mov
+# Web 压缩版（Vercel 生产用，可提交 git）
+!packages/web/public/assets/videos/web/
+!packages/web/public/assets/videos/web/**
 
 # Generated Live activation codes (plaintext — never commit)
 out/

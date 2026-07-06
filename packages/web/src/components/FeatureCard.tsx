@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import AtmosphereOrb, { type OrbPalette } from '@/components/AtmosphereOrb';
 import LoopVideo from '@/components/LoopVideo';
 import TerminalBlock from '@/components/TerminalBlock';
+import { featureCardVariant } from '@/lib/videoSources';
 
 interface FeatureCardProps {
   step: string;
@@ -92,6 +93,8 @@ export default function FeatureCard({
                 opacity={hovered ? 1 : 0.82}
                 objectPosition={videoPosition}
                 playbackRate={hovered ? 1.08 : 0.92}
+                fallbackVariant={featureCardVariant(title)}
+                className="absolute inset-0"
               />
               <div
                 className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/30 transition-opacity duration-500 ${hovered ? 'opacity-60' : 'opacity-100'}`}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { PROTECTION_ASSETS, VIDEO_ASSETS } from '@/data/videoAssets';
 import type { ProtectionTone } from '@/lib/protectionStatus';
+import { resolveVideoCandidates } from '@/lib/videoSources';
 
 interface ProtectionHeroVisualProps {
   muted: boolean;
@@ -47,6 +48,9 @@ export default function ProtectionHeroVisual({ muted, tone }: ProtectionHeroVisu
   const [failed, setFailed] = useState(false);
   const heroImage = TONE_HERO_IMAGE[tone];
   const useVideo = heroImage === undefined;
+  const protectionCandidates = resolveVideoCandidates(VIDEO_ASSETS.protectionHero);
+  const [protectionSrcIndex, setProtectionSrcIndex] = useState(0);
+  const protectionSrc = protectionCandidates[protectionSrcIndex] ?? VIDEO_ASSETS.protectionHero;
 
   const tryPlay = useCallback(
     (video: HTMLVideoElement) => {
@@ -60,6 +64,7 @@ export default function ProtectionHeroVisual({ muted, tone }: ProtectionHeroVisu
     if (!useVideo) {
       setReady(false);
       setFailed(false);
+      setProtectionSrcIndex(0);
       return;
     }
 
@@ -151,7 +156,17 @@ export default function ProtectionHeroVisual({ muted, tone }: ProtectionHeroVisu
       videoB.removeEventListener('timeupdate', onTimeUpdateB);
       document.removeEventListener('visibilitychange', onVisible);
     };
-  }, [failed, muted, tryPlay, useVideo]);
+  }, [failed, muted, protectionSrc, tryPlay, useVideo]);
+
+  const onProtectionVideoError = useCallback(() => {
+    setProtectionSrcIndex((prev) => {
+      if (prev + 1 < protectionCandidates.length) {
+        return prev + 1;
+      }
+      setFailed(true);
+      return prev;
+    });
+  }, [protectionCandidates.length]);
 
   const videoClass = (front: boolean): string => {
     const parts = ['protect-shell__video'];
@@ -180,21 +195,21 @@ export default function ProtectionHeroVisual({ muted, tone }: ProtectionHeroVisu
           <video
             ref={videoARef}
             className={videoClass(true)}
-            src={VIDEO_ASSETS.protectionHero}
+            src={protectionSrc}
             autoPlay
             muted={muted}
             playsInline
             preload="auto"
-            onError={() => setFailed(true)}
+            onError={onProtectionVideoError}
           />
           <video
             ref={videoBRef}
             className={videoClass(false)}
-            src={VIDEO_ASSETS.protectionHero}
+            src={protectionSrc}
             muted={muted}
             playsInline
             preload="auto"
-            onError={() => setFailed(true)}
+            onError={onProtectionVideoError}
           />
         </>
       )}
