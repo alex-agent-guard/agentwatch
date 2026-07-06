@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import BrandIcon from '@/components/icons/BrandIcon';
 import {
@@ -15,6 +15,7 @@ interface EntityBrandAvatarProps {
   fallbackColor: string;
   muted?: boolean;
   size?: 'sm' | 'md';
+  href?: string;
 }
 
 function resolveIcon(kind: 'client' | 'service', entityKey: string): BrandIconId | null {
@@ -28,19 +29,38 @@ export default function EntityBrandAvatar({
   fallbackColor,
   muted = false,
   size = 'md',
+  href,
 }: EntityBrandAvatarProps) {
   const iconId = resolveIcon(kind, entityKey);
   const px = size === 'sm' ? 22 : 32;
 
-  if (iconId) {
+  const wrapLink = (node: ReactNode) => {
+    if (!href) {
+      return node;
+    }
     return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="protect-matrix__avatar-link"
+        title={iconId ? brandIconLabel(iconId) : undefined}
+        aria-label={iconId ? `${brandIconLabel(iconId)} 官网` : '服务官网'}
+      >
+        {node}
+      </a>
+    );
+  };
+
+  if (iconId) {
+    return wrapLink(
       <span
         className={`protect-matrix__avatar protect-matrix__avatar--brand ${muted ? 'protect-matrix__avatar--muted' : ''}`}
-        title={brandIconLabel(iconId)}
-        aria-hidden
+        title={href ? undefined : brandIconLabel(iconId)}
+        aria-hidden={href ? undefined : true}
       >
         <BrandIcon id={iconId} size={px} />
-      </span>
+      </span>,
     );
   }
 

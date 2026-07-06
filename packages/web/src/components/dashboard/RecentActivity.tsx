@@ -70,15 +70,38 @@ export default function RecentActivity({ items, listening }: RecentActivityProps
                 <span className="protect-activity__tool-name">{row.toolName}</span>
               </div>
               <div className="protect-activity__tail">
-                <span
-                  className="protect-activity__service-tag"
-                  style={{ color: row.serviceColor, borderColor: `${row.serviceColor}33` }}
-                >
-                  {serviceBrandIcon(row.serviceName) && (
-                    <BrandIcon id={serviceBrandIcon(row.serviceName)!} size={16} className="protect-activity__service-icon" />
-                  )}
-                  {row.serviceLabel}
-                </span>
+                {row.serviceUrl ? (
+                  <a
+                    href={row.serviceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="protect-activity__service-tag protect-activity__service-tag--link"
+                    style={{ color: row.serviceColor, borderColor: `${row.serviceColor}33` }}
+                  >
+                    {serviceBrandIcon(row.serviceName) && (
+                      <BrandIcon
+                        id={serviceBrandIcon(row.serviceName)!}
+                        size={16}
+                        className="protect-activity__service-icon"
+                      />
+                    )}
+                    {row.serviceLabel}
+                  </a>
+                ) : (
+                  <span
+                    className="protect-activity__service-tag"
+                    style={{ color: row.serviceColor, borderColor: `${row.serviceColor}33` }}
+                  >
+                    {serviceBrandIcon(row.serviceName) && (
+                      <BrandIcon
+                        id={serviceBrandIcon(row.serviceName)!}
+                        size={16}
+                        className="protect-activity__service-icon"
+                      />
+                    )}
+                    {row.serviceLabel}
+                  </span>
+                )}
                 <span className={`protect-decision ${DECISION_CLASS[row.decision]}`}>
                   {DECISION_LABEL[row.decision] ?? row.decision}
                 </span>

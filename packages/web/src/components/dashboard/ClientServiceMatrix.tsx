@@ -80,6 +80,7 @@ export default function ClientServiceMatrix({ links }: ClientServiceMatrixProps)
                 fallbackShort={row.serviceLabel.slice(0, 2).toUpperCase()}
                 fallbackColor={row.serviceColor}
                 muted={!row.serviceReported}
+                href={row.serviceUrl}
               />
             </div>
           </li>

@@ -15,12 +15,12 @@ export interface ServiceDisplay {
 const SERVICE_CATALOG: Record<string, { label: string; url?: string; color: string }> = {
   '@okx_ai/okx-trade-mcp': {
     label: 'OKX Trade MCP',
-    url: 'https://www.okx.com/',
+    url: 'https://okx.ai',
     color: '#000000',
   },
   '@okxguild/mcp-server-okx': {
     label: 'OKX MCP',
-    url: 'https://www.okx.com/',
+    url: 'https://okx.ai',
     color: '#000000',
   },
   '@modelcontextprotocol/server-everything': {

@@ -6893,6 +6893,19 @@ a.protect-mix__name:hover {
   overflow: hidden;
 }
 
+.protect-matrix__avatar-link {
+  flex-shrink: 0;
+  display: flex;
+  line-height: 0;
+  border-radius: 22%;
+  text-decoration: none;
+}
+
+.protect-matrix__avatar-link:focus-visible {
+  outline: 2px solid rgba(77, 159, 255, 0.65);
+  outline-offset: 2px;
+}
+
 .protect-matrix__avatar--brand .brand-icon {
   display: block;
   flex-shrink: 0;
@@ -7000,6 +7013,15 @@ a.protect-mix__name:hover {
   font-weight: 550;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.protect-activity__service-tag--link {
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.protect-activity__service-tag--link:hover {
+  opacity: 0.88;
 }
 
 .protect-activity__service-icon {
