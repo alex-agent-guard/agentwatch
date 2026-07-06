@@ -23,6 +23,11 @@ const SERVICE_CATALOG: Record<string, { label: string; url?: string; color: stri
     url: 'https://okx.ai',
     color: '#000000',
   },
+  '@hyperliquid/mcp-server-hyperliquid': {
+    label: 'Hyperliquid MCP',
+    url: 'https://hyperliquid.xyz/',
+    color: '#50fa9f',
+  },
   '@modelcontextprotocol/server-everything': {
     label: 'MCP Everything',
     url: 'https://modelcontextprotocol.io/',

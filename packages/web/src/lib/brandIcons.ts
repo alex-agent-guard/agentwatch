@@ -1,5 +1,5 @@
 /** 已知 MCP 客户端 / 服务 — 品牌图标映射 */
-export type BrandIconId = 'okx' | 'claude-code' | 'codex' | 'cursor' | 'hermes';
+export type BrandIconId = 'okx' | 'claude-code' | 'codex' | 'cursor' | 'hermes' | 'hyperliquid';
 
 /** 官方 PNG 素材（圆角由 CSS 统一裁切） */
 export const BRAND_IMAGE_ASSETS: Partial<Record<BrandIconId, string>> = {
@@ -7,6 +7,7 @@ export const BRAND_IMAGE_ASSETS: Partial<Record<BrandIconId, string>> = {
   cursor: '/assets/images/brands/cursor.png',
   codex: '/assets/images/brands/codex.png',
   hermes: '/assets/images/brands/hermes.png',
+  hyperliquid: '/assets/images/brands/hyperliquid.png',
 };
 
 const CLIENT_ICON: Record<string, BrandIconId> = {
@@ -21,6 +22,7 @@ const CLIENT_ICON: Record<string, BrandIconId> = {
 const SERVICE_ICON: Record<string, BrandIconId> = {
   '@okx_ai/okx-trade-mcp': 'okx',
   '@okxguild/mcp-server-okx': 'okx',
+  '@hyperliquid/mcp-server-hyperliquid': 'hyperliquid',
 };
 
 export function clientBrandIcon(clientName: string | null | undefined): BrandIconId | null {
@@ -45,5 +47,7 @@ export function brandIconLabel(id: BrandIconId): string {
       return 'Cursor';
     case 'hermes':
       return 'Hermes';
+    case 'hyperliquid':
+      return 'Hyperliquid';
   }
 }

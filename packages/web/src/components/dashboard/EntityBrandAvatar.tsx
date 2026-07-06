@@ -45,7 +45,7 @@ export default function EntityBrandAvatar({
         rel="noopener noreferrer"
         className="protect-matrix__avatar-link"
         title={iconId ? brandIconLabel(iconId) : undefined}
-        aria-label={iconId ? `${brandIconLabel(iconId)} 官网` : '服务官网'}
+        aria-label={iconId ? `${brandIconLabel(iconId)} 官网` : kind === 'client' ? '客户端官网' : '服务官网'}
       >
         {node}
       </a>

@@ -58,6 +58,7 @@ export default function RecentActivity({ items, listening }: RecentActivityProps
                     fallbackShort={row.clientShort}
                     fallbackColor={row.clientColor}
                     size="sm"
+                    href={row.clientUrl}
                   />
                 ) : (
                   <span

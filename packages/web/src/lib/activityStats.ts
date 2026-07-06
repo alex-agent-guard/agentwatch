@@ -9,6 +9,7 @@ export interface ActivityRow {
   clientLabel: string;
   clientShort: string;
   clientColor: string;
+  clientUrl?: string;
   clientReported: boolean;
   serviceName: string;
   serviceLabel: string;
@@ -24,6 +25,7 @@ export interface ClientServiceLink {
   clientLabel: string;
   clientShort: string;
   clientColor: string;
+  clientUrl?: string;
   clientReported: boolean;
   serviceName: string;
   serviceLabel: string;
@@ -50,6 +52,7 @@ export function getRecentActivity(events: AgentWatchEvent[], limit = 6): Activit
         clientLabel: client.label,
         clientShort: client.short,
         clientColor: client.color,
+        clientUrl: client.url,
         clientReported: client.hasBackendSource,
         serviceName: e.service_name,
         serviceLabel: svc.label,
@@ -84,6 +87,7 @@ export function getClientServiceLinks(events: AgentWatchEvent[]): ClientServiceL
         clientLabel: client.label,
         clientShort: client.short,
         clientColor: client.color,
+        clientUrl: client.url,
         clientReported: client.hasBackendSource,
         serviceName,
         serviceLabel: service.label,

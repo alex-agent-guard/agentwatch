@@ -36,13 +36,26 @@ export default function ClientServiceMatrix({ links }: ClientServiceMatrixProps)
                 fallbackShort={row.clientShort}
                 fallbackColor={row.clientColor}
                 muted={!row.clientReported}
+                href={row.clientUrl}
               />
-              <span
-                className={`protect-matrix__name ${!row.clientReported ? 'protect-matrix__name--pending' : ''}`}
-                title={row.clientReported ? row.clientName : undefined}
-              >
-                {row.clientLabel}
-              </span>
+              {row.clientUrl ? (
+                <a
+                  href={row.clientUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`protect-matrix__name protect-matrix__name--link ${!row.clientReported ? 'protect-matrix__name--pending' : ''}`}
+                  title={row.clientReported ? row.clientName : undefined}
+                >
+                  {row.clientLabel}
+                </a>
+              ) : (
+                <span
+                  className={`protect-matrix__name ${!row.clientReported ? 'protect-matrix__name--pending' : ''}`}
+                  title={row.clientReported ? row.clientName : undefined}
+                >
+                  {row.clientLabel}
+                </span>
+              )}
             </div>
 
             <div className="protect-matrix__bridge" aria-hidden>
