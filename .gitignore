@@ -5,6 +5,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.production.example
 coverage/
 *.log
 .agentwatch/
@@ -22,3 +23,7 @@ packages/web/public/assets/videos/*.mov
 # Generated Live activation codes (plaintext — never commit)
 out/
 *.tsbuildinfo
+
+# Vercel local link (CLI)
+.vercel/
+packages/web/.vercel/

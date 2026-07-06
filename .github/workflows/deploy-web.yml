@@ -1,11 +1,7 @@
+# 备用：GitHub Pages（非商用主站）。商用请用 Vercel，见 docs/DEPLOY_WEB.md
 name: Deploy Web (GitHub Pages)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'packages/web/**'
-      - '.github/workflows/deploy-web.yml'
   workflow_dispatch:
 
 concurrency:

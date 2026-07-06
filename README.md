@@ -121,7 +121,7 @@ echo $?   # 0=通过, 1=篡改/错误, 2=参数错误
 | Dashboard | `/dashboard` | `VITE_USE_MOCK=false` 且已登录时读 Supabase `events` |
 | Settings | `/settings` | 绑定 `install_id`（= CLI `agentId`）与上报密钥 |
 
-云端 DDL 与部署：[docs/supabase/DEPLOY_LOGIN.md](docs/supabase/DEPLOY_LOGIN.md)
+云端 DDL 与部署：[docs/supabase/DEPLOY_LOGIN.md](docs/supabase/DEPLOY_LOGIN.md) · **Web 商用部署（Vercel + 自有域名）**：[docs/DEPLOY_WEB.md](docs/DEPLOY_WEB.md)
 
 ---
 
@@ -290,7 +290,7 @@ agentwatch-web3 audit verify --json && echo $?
 | **0.1.2** | 修复 commander 生产依赖；Supabase 上报适配 |
 | **0.2.0** | Live 登录（GitHub/Wallet）、激活码门禁、审计详情增强、码池管理工具；**当前稳定版** |
 
-Dashboard 源码在 `packages/web`，需单独 `npm run dev` / 部署；CLI 已通过 npm 发布。
+Dashboard 源码在 `packages/web`；**商用上线**见 [docs/DEPLOY_WEB.md](docs/DEPLOY_WEB.md)（Vercel + 自有域名）；CLI 已通过 npm 发布 `@agentwatch-web3/cli@0.2.0`。
 
 ---
 
