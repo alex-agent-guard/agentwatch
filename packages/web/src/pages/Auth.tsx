@@ -13,7 +13,6 @@ import {
   signInWithWallet,
 } from '@/lib/auth';
 import { storeAuthRedirect, peekAuthRedirect } from '@/lib/authRedirect';
-import { enterGuestMode } from '@/lib/session';
 import { resolvePostLoginRoute } from '@/lib/postAuthRoute';
 import { USE_MOCK } from '@/lib/supabase';
 
@@ -223,21 +222,6 @@ export default function Auth() {
               </div>
 
               {error && <p className="auth-stage__error">{error}</p>}
-
-              {USE_MOCK && (
-                <motion.button
-                  type="button"
-                  className="auth-stage__demo"
-                  onClick={() => {
-                    enterGuestMode();
-                    navigate('/home');
-                  }}
-                  whileHover={{ opacity: 1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Dev Mock →
-                </motion.button>
-              )}
 
               <div className="auth-stage__previews">
                 <Link to="/preview/home" className="auth-stage__demo-link">
