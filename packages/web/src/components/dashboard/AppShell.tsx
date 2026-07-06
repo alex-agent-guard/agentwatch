@@ -6,12 +6,13 @@ import MobileTabBar from '@/components/dashboard/MobileTabBar';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { useTabSwipe } from '@/lib/useTabSwipe';
 
-interface DevAppShellProps {
+interface AppShellProps {
   children: ReactNode;
+  className?: string;
 }
 
-/** 新用户 Demo 壳 — 与正式应用相同的侧栏 / 底栏，路由在 /preview/* 下 */
-export default function DevAppShell({ children }: DevAppShellProps) {
+/** 已登录应用壳 — 侧栏 + 底栏 + 主内容（支持 Tab 滑动） */
+export default function AppShell({ children, className = '' }: AppShellProps) {
   const location = useLocation();
   useTabSwipe(location.pathname);
 
@@ -20,7 +21,7 @@ export default function DevAppShell({ children }: DevAppShellProps) {
       <DashboardBackdrop />
       <Sidebar />
       <MobileTabBar />
-      <main className="dash-main dash-main--swipe relative z-10">{children}</main>
+      <main className={`dash-main dash-main--swipe relative z-10 ${className}`.trim()}>{children}</main>
     </div>
   );
 }

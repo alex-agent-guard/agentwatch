@@ -19,18 +19,18 @@ const TONE_COPY: Record<
   { badge: string; title: string; subtitle: string }
 > = {
   healthy: {
-    badge: '已开启 · 一切正常',
+    badge: '一切正常',
     title: '一切正常',
     subtitle: '汐底在为你的 agent 护航',
   },
   warn: {
-    badge: '注意 · 有需要留意的操作',
+    badge: '需注意',
     title: '发现注意项',
     subtitle: '请查看下方记录，确认 Agent 操作是否预期',
   },
   block: {
-    badge: '警示 · 已拦截风险',
-    title: '已为你拦截危险操作',
+    badge: '已拦截',
+    title: '风险已挡',
     subtitle: '汐底挡住了可疑行为，你的 Agent 仍受保护',
   },
 };
@@ -117,11 +117,12 @@ export default function ProtectionHeroStatus({
             {copy.badge}
           </div>
 
-          <h2 className={`protect-shell__title protect-shell__title--hero protect-shell__title--${tone}`}>
-            <span className="protect-shell__title-main">{copy.title}</span>
-            {tone !== 'healthy' && <span className="protect-shell__title-accent" aria-hidden />}
-            <span className="protect-shell__title-sub">{copy.subtitle}</span>
-          </h2>
+          {tone !== 'healthy' && (
+            <h2 className={`protect-shell__title protect-shell__title--hero protect-shell__title--${tone}`}>
+              <span className="protect-shell__title-main">{copy.title}</span>
+              <span className="protect-shell__title-accent" aria-hidden />
+            </h2>
+          )}
 
           <p className="protect-shell__agent">{truncateId(installId)}</p>
         </div>

@@ -75,7 +75,7 @@ export default function RecentActivity({ items, listening }: RecentActivityProps
                   style={{ color: row.serviceColor, borderColor: `${row.serviceColor}33` }}
                 >
                   {serviceBrandIcon(row.serviceName) && (
-                    <BrandIcon id={serviceBrandIcon(row.serviceName)!} size={14} className="protect-activity__service-icon" />
+                    <BrandIcon id={serviceBrandIcon(row.serviceName)!} size={16} className="protect-activity__service-icon" />
                   )}
                   {row.serviceLabel}
                 </span>

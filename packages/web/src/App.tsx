@@ -87,6 +87,7 @@ export default function App() {
         <Route path="/preview/reports" element={<DevReportsPreview />} />
         <Route path="/preview/settings" element={<DevSettingsPreview />} />
         <Route path="/preview/onboarding" element={<Navigate to="/preview/settings" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
   );

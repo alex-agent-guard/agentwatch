@@ -105,7 +105,7 @@ export default function Home() {
             本地部署 · 链式验真 · 云端洞察
           </p>
           <Link
-            to="/home"
+            to="/auth"
             className="okx-btn-white type-heading mt-8 inline-block text-sm"
             onClick={() => storeAuthRedirect('/home')}
           >

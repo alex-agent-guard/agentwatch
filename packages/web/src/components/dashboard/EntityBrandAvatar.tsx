@@ -30,7 +30,7 @@ export default function EntityBrandAvatar({
   size = 'md',
 }: EntityBrandAvatarProps) {
   const iconId = resolveIcon(kind, entityKey);
-  const px = size === 'sm' ? 18 : 28;
+  const px = size === 'sm' ? 22 : 32;
 
   if (iconId) {
     return (

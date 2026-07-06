@@ -209,7 +209,27 @@
   }
 
   .protect-shell__cinema {
-    min-height: min(44vh, 18rem);
+    min-height: min(50vh, 21rem);
+  }
+
+  .protect-shell__status-aura {
+    display: none;
+  }
+
+  .protect-shell__agent {
+    display: none;
+  }
+
+  .protect-shell__title-main {
+    font-size: 1.2rem;
+  }
+
+  .protect-shell__stat-value {
+    font-size: 1.15rem;
+  }
+
+  .protect-shell__stat-label {
+    font-size: 0.625rem;
   }
 
   .protect-shell__icon-btn {
@@ -249,6 +269,17 @@
     grid-template-rows: auto auto auto;
     gap: 0.35rem;
     padding: 0.75rem;
+  }
+
+  .protect-matrix__avatar--brand {
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 0.55rem;
+  }
+
+  .protect-activity__leading .protect-matrix__avatar--brand {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .protect-matrix__side--client {
@@ -423,5 +454,62 @@
 
   .dash-mobile-nav__label {
     font-size: 0.625rem;
+  }
+}
+
+/* Audit events — mobile breathing room */
+@media (max-width: 767px) {
+  .dash-table-wrap--audit {
+    border-radius: 14px;
+  }
+
+  .dash-table--audit tbody .dash-table-row td {
+    padding-top: 0.95rem;
+    padding-bottom: 0.95rem;
+  }
+
+  .dash-audit-scroll {
+    max-height: min(70vh, 28rem);
+  }
+
+  .dash-audit-row {
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0.4rem 0.75rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .dash-audit-row__badge {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin-top: 0.15rem;
+  }
+
+  .dash-audit-row__tool {
+    grid-column: 2 / span 2;
+    grid-row: 1;
+    white-space: normal;
+    line-height: 1.45;
+  }
+
+  .dash-audit-row__time {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.6875rem;
+  }
+
+  .dash-audit-row__score {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .dash-audit-detail__hero {
+    margin-bottom: 1rem;
+  }
+
+  .dash-detail__inner {
+    padding-top: 0.75rem;
   }
 }

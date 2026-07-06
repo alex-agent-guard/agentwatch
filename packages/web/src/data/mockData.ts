@@ -512,8 +512,6 @@ export const MOCK_EVENTS: AgentWatchEvent[] = [
   },
 ];
 
-const HL_MCP = '@hyperliquid/mcp-server-hyperliquid';
-
 /** 登录页 Demo → /preview/home：一切正常 + agent 行为记录有示例数据 */
 export const DEMO_HOME_EVENTS: AgentWatchEvent[] = [
   {
@@ -628,9 +626,9 @@ export const DEMO_HOME_EVENTS: AgentWatchEvent[] = [
     user_id: 'demo_user',
     event_id: 'demo-005',
     tool_name: 'get_market_price',
-    service_name: HL_MCP,
+    service_name: '@okx_ai/okx-trade-mcp',
     client_name: 'codex',
-    tool_source: HL_MCP,
+    tool_source: '@okx_ai/okx-trade-mcp',
     timestamp_ms: now - hour * 0.2,
     duration_ms: 8,
     detection_duration_ms: 2,
@@ -653,9 +651,9 @@ export const DEMO_HOME_EVENTS: AgentWatchEvent[] = [
     user_id: 'demo_user',
     event_id: 'demo-006',
     tool_name: 'query_balance',
-    service_name: HL_MCP,
+    service_name: '@okx_ai/okx-trade-mcp',
     client_name: 'codex',
-    tool_source: HL_MCP,
+    tool_source: '@okx_ai/okx-trade-mcp',
     timestamp_ms: now - hour * 0.75,
     duration_ms: 10,
     detection_duration_ms: 2,
@@ -680,9 +678,9 @@ export const DEMO_HOME_EVENTS: AgentWatchEvent[] = [
     user_id: 'demo_user',
     event_id: 'demo-007',
     tool_name: 'swap',
-    service_name: HL_MCP,
+    service_name: '@okx_ai/okx-trade-mcp',
     client_name: 'hermes',
-    tool_source: HL_MCP,
+    tool_source: '@okx_ai/okx-trade-mcp',
     timestamp_ms: now - hour * 0.15,
     duration_ms: 42,
     detection_duration_ms: 4,
@@ -706,9 +704,9 @@ export const DEMO_HOME_EVENTS: AgentWatchEvent[] = [
     user_id: 'demo_user',
     event_id: 'demo-008',
     tool_name: 'query_balance',
-    service_name: HL_MCP,
+    service_name: '@okx_ai/okx-trade-mcp',
     client_name: 'hermes',
-    tool_source: HL_MCP,
+    tool_source: '@okx_ai/okx-trade-mcp',
     timestamp_ms: now - hour * 0.55,
     duration_ms: 9,
     detection_duration_ms: 2,

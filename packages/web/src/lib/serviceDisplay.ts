@@ -15,18 +15,13 @@ export interface ServiceDisplay {
 const SERVICE_CATALOG: Record<string, { label: string; url?: string; color: string }> = {
   '@okx_ai/okx-trade-mcp': {
     label: 'OKX Trade MCP',
-    url: 'https://okx.ai/',
+    url: 'https://www.okx.com/',
     color: '#000000',
   },
   '@okxguild/mcp-server-okx': {
     label: 'OKX MCP',
-    url: 'https://okx.ai/',
+    url: 'https://www.okx.com/',
     color: '#000000',
-  },
-  '@hyperliquid/mcp-server-hyperliquid': {
-    label: 'Hyperliquid MCP',
-    url: 'https://hyperliquid.xyz/',
-    color: '#50fa9f',
   },
   '@modelcontextprotocol/server-everything': {
     label: 'MCP Everything',

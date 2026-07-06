@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
-import MobileTabBar from '@/components/dashboard/MobileTabBar';
+import AppShell from '@/components/dashboard/AppShell';
 import ProtectionLanding from '@/components/dashboard/ProtectionLanding';
-import Sidebar from '@/components/dashboard/Sidebar';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
 import {
   PROTECTION_GRADUATE_THRESHOLD,
@@ -58,24 +56,18 @@ export default function AppHome() {
   }, [navigate]);
 
   return (
-    <div className="relative flex min-h-screen">
-      <DashboardBackdrop />
-      <Sidebar />
-      <MobileTabBar />
-
-      <main className="dash-main relative z-10">
-        {(!loading || isLiveDataMode()) && (
-          <ProtectionLanding
-            installId={installId}
-            events={events}
-            refreshing={refreshing}
-            lastUpdated={lastUpdated}
-            error={error}
-            onRefresh={() => load('refresh')}
-            onOpenFullDashboard={openFullDashboard}
-          />
-        )}
-      </main>
-    </div>
+    <AppShell>
+      {(!loading || isLiveDataMode()) && (
+        <ProtectionLanding
+          installId={installId}
+          events={events}
+          refreshing={refreshing}
+          lastUpdated={lastUpdated}
+          error={error}
+          onRefresh={() => load('refresh')}
+          onOpenFullDashboard={openFullDashboard}
+        />
+      )}
+    </AppShell>
   );
 }

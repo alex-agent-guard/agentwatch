@@ -31,8 +31,8 @@ export function clearAuthCallbackFromUrl(): void {
   url.searchParams.delete('error');
   url.searchParams.delete('error_description');
   url.searchParams.delete('state');
-  const hash = url.hash.replace(/[#?&](access_token|error|error_description|code)=[^&]*/g, '');
-  url.hash = hash || '#/auth';
+  const cleanedHash = url.hash.replace(/[#?&](access_token|error|error_description|code)=[^&]*/g, '');
+  url.hash = cleanedHash && cleanedHash !== '#' ? cleanedHash : '#/';
   window.history.replaceState({}, '', url.toString());
 }
 

@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import AgentOnboarding from '@/components/AgentOnboarding';
 import DevAppShell from '@/components/dashboard/DevAppShell';
@@ -34,17 +34,7 @@ export default function DevSettingsPreview() {
   }
 
   return (
-    <DevAppShell
-      badge={
-        <>
-          产品体验
-          {' · '}
-          <Link to="/auth" className="agent-onboard-preview-badge__link">
-            登录后开始绑定
-          </Link>
-        </>
-      }
-    >
+    <DevAppShell>
       <AgentOnboarding
         demoPreview
         accountLabel={null}

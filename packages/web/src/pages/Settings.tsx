@@ -2,10 +2,8 @@ import type { CSSProperties, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AgentOnboarding from '@/components/AgentOnboarding';
+import AppShell from '@/components/dashboard/AppShell';
 import DashPageHeader from '@/components/dashboard/DashPageHeader';
-import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
-import MobileTabBar from '@/components/dashboard/MobileTabBar';
-import Sidebar from '@/components/dashboard/Sidebar';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
 import {
   consumeAgentBindPrefill,
@@ -201,13 +199,8 @@ export default function Settings() {
   const dataModeLabel = shouldUseDemoData() ? '演示' : '实时';
 
   return (
-    <div className="relative flex min-h-screen">
-      <DashboardBackdrop />
-      <Sidebar />
-      <MobileTabBar />
-
-      <main className="dash-main relative z-10">
-        <DashPageHeader title="设置" variant="page" eyebrow="Settings" />
+    <AppShell>
+      <DashPageHeader title="设置" variant="page" eyebrow="Settings" />
 
         {status && (
           <p className="dash-settings-footnote dash-enter" style={{ color: '#8fd4a8' }}>
@@ -334,7 +327,6 @@ export default function Settings() {
             </button>
           </form>
         </section>
-      </main>
-    </div>
+    </AppShell>
   );
 }

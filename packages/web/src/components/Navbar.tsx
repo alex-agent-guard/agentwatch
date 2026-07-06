@@ -66,9 +66,6 @@ export default function Navbar() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <Link to="/auth" className="okx-btn-white hidden text-xs sm:inline-flex md:text-sm">
-              Begin
-            </Link>
             <button
               type="button"
               className="okx-nav__menu-btn md:hidden"
@@ -110,9 +107,6 @@ export default function Navbar() {
                 );
               })}
             </div>
-            <Link to="/auth" className="okx-btn-white okx-nav__sheet-cta">
-              Begin
-            </Link>
           </div>
         </div>
       )}

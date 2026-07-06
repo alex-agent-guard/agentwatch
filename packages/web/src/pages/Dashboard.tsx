@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
+import AppShell from '@/components/dashboard/AppShell';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import HmacChainPanel from '@/components/dashboard/HmacChainPanel';
-import MobileTabBar from '@/components/dashboard/MobileTabBar';
+import StatMetric from '@/components/dashboard/StatMetric';
 import RiskDistributionChart from '@/components/dashboard/RiskDistributionChart';
 import RiskTrendChart from '@/components/dashboard/RiskTrendChart';
-import Sidebar from '@/components/dashboard/Sidebar';
-import StatMetric from '@/components/dashboard/StatMetric';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
 import { getMockTrendData } from '@/data/mockData';
 import { fetchEvents } from '@/lib/events';
@@ -90,13 +88,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative flex min-h-screen">
-      <DashboardBackdrop />
-      <Sidebar />
-      <MobileTabBar />
-
-      <main className="dash-main relative z-10">
-        <DashboardHeader
+    <AppShell>
+      <DashboardHeader
           installId={installId}
           error={error}
           lastUpdated={lastUpdated}
@@ -162,8 +155,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <HmacChainPanel events={events} />
-      </main>
-    </div>
+      <HmacChainPanel events={events} />
+    </AppShell>
   );
 }

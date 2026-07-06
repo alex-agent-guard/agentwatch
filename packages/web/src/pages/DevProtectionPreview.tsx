@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import DevAppShell from '@/components/dashboard/DevAppShell';
 import ProtectionLanding from '@/components/dashboard/ProtectionLanding';
@@ -30,17 +30,7 @@ export default function DevProtectionPreview() {
   );
 
   return (
-    <DevAppShell
-      badge={
-        <>
-          产品体验 · 示例数据
-          {' · '}
-          <Link to="/auth" className="agent-onboard-preview-badge__link">
-            登录开始使用
-          </Link>
-        </>
-      }
-    >
+    <DevAppShell>
       <ProtectionLanding
         installId={PREVIEW_INSTALL_ID}
         events={events}
@@ -59,17 +49,7 @@ export default function DevProtectionPreview() {
 /** 产品体验 — 首页 · 新用户空数据 */
 export function DevProtectionEmptyPreview() {
   return (
-    <DevAppShell
-      badge={
-        <>
-          产品体验 · 新用户尚无数据
-          {' · '}
-          <Link to="/preview/home" className="agent-onboard-preview-badge__link">
-            有数据示例
-          </Link>
-        </>
-      }
-    >
+    <DevAppShell>
       <ProtectionLanding
         installId={PREVIEW_INSTALL_ID}
         events={[]}

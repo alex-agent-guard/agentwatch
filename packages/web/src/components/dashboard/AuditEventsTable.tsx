@@ -64,8 +64,8 @@ export default function AuditEventsTable({
   const selectedRow = selectedEvent;
 
   return (
-    <div className="dash-glass dash-panel dash-panel--elevated p-4 md:p-5 dash-enter" style={{ '--dash-delay': '220ms' } as CSSProperties}>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="dash-glass dash-panel dash-panel--elevated p-5 md:p-6 dash-enter" style={{ '--dash-delay': '220ms' } as CSSProperties}>
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="dash-panel__head mb-0">
           <h3 className="dash-panel__title">审计事件</h3>
           <p className="dash-panel__desc">点击行查看引擎命中与上报字段</p>
@@ -90,30 +90,30 @@ export default function AuditEventsTable({
         </div>
       </div>
 
-      <div className="dash-table-wrap overflow-x-auto">
-        <table className="dash-table w-full min-w-[720px] text-left text-sm">
+      <div className="dash-table-wrap dash-table-wrap--audit overflow-x-auto">
+        <table className="dash-table dash-table--audit w-full min-w-0 md:min-w-[720px] text-left text-sm">
           <thead>
             <tr className="text-xs text-text-muted">
-              <th className="px-4 py-3 font-medium w-8" />
-              <th className="px-4 py-3 font-medium">Event</th>
-              <th className="px-4 py-3 font-medium">Tool</th>
-              <th className="px-4 py-3 font-medium">Decision</th>
-              <th className="px-4 py-3 font-medium">Risk</th>
-              <th className="px-4 py-3 font-medium">Time</th>
+              <th className="px-4 py-3.5 font-medium w-8" />
+              <th className="px-4 py-3.5 font-medium">Event</th>
+              <th className="px-4 py-3.5 font-medium">Tool</th>
+              <th className="px-4 py-3.5 font-medium">Decision</th>
+              <th className="px-4 py-3.5 font-medium">Risk</th>
+              <th className="px-4 py-3.5 font-medium">Time</th>
             </tr>
           </thead>
           <tbody>
             {loading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={`sk-${String(i)}`} className="dash-table-row">
-                  <td colSpan={6} className="px-4 py-4">
+                  <td colSpan={6} className="px-5 py-5">
                     <div className="dash-skeleton h-4" />
                   </td>
                 </tr>
               ))}
             {!loading && pageRows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-text-muted">
+                <td colSpan={6} className="px-5 py-14 text-center text-text-muted">
                   {emptyHint}
                 </td>
               </tr>
@@ -130,25 +130,25 @@ export default function AuditEventsTable({
                     className={`dash-table-row ${isSelected ? 'dash-table-row--open' : ''}`}
                     data-decision={row.final_decision}
                   >
-                    <td className="px-2 py-3.5 text-center">
+                    <td className="px-3 py-4 text-center">
                       <span className={`dash-table-row__chev ${isSelected ? 'dash-table-row__chev--open' : ''}`} aria-hidden>
                         ›
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-mono text-xs text-text-data">{row.event_id}</td>
-                    <td className="px-4 py-3.5 text-text-secondary">{actionDisplay(row)}</td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-4 py-4 font-mono text-xs text-text-data">{row.event_id}</td>
+                    <td className="px-4 py-4 text-text-secondary">{actionDisplay(row)}</td>
+                    <td className="px-4 py-4">
                       <span
-                        className="dash-badge"
+                        className="dash-badge dash-badge--audit"
                         style={{ color, background: `${color}18`, borderColor: `${color}30` }}
                       >
                         {row.final_decision}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 font-mono text-text-data">
+                    <td className="px-4 py-4 font-mono text-text-data">
                       {riskScoreDisplay(score)}
                     </td>
-                    <td className="px-4 py-3.5 text-xs text-text-muted">
+                    <td className="px-4 py-4 text-xs text-text-muted">
                       {formatTimestamp(row.timestamp_ms)}
                     </td>
                   </tr>
@@ -179,7 +179,7 @@ export default function AuditEventsTable({
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-xs text-text-muted">
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-text-muted">
         <span>
           共 {filtered.length} 条 · 第 {page + 1}/{totalPages} 页
         </span>
