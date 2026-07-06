@@ -60,8 +60,8 @@ export default function ProtectionLanding({
 
           <div className="protect-shell__cinema-head">
             <div className="protect-shell__cinema-head-start">
-              <Link to="/" className="protect-shell__back">
-                back
+              <Link to="/" className="protect-shell__back" aria-label="返回官网">
+                ←
               </Link>
               <span className="protect-shell__eyebrow">安全中心</span>
             </div>

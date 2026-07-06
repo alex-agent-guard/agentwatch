@@ -126,8 +126,6 @@ export default function ReportAuditTimeline({
     return { total: filtered.length, blocks, warns };
   }, [filtered]);
 
-  const selected = selectedEvent;
-
   useEffect(() => {
     if (selectedEvent && !filtered.some((e) => e.event_id === selectedEvent.event_id)) {
       setSelectedEvent(null);
@@ -253,7 +251,7 @@ export default function ReportAuditTimeline({
                         const color = riskColor(event.l1_combined_score, event.final_decision);
                         const active = selectedEvent?.event_id === event.event_id;
                         return (
-                          <li key={event.event_id}>
+                          <li key={event.event_id} className="dash-audit-rows__item">
                             <button
                               type="button"
                               className={`dash-audit-row dash-audit-row--${event.final_decision.toLowerCase()} ${
@@ -281,6 +279,15 @@ export default function ReportAuditTimeline({
                                 {riskScoreDisplay(event.l1_combined_score)}
                               </span>
                             </button>
+                            {active && (
+                              <div className="dash-audit-row-detail">
+                                <AuditDetailPane
+                                  event={event}
+                                  onClose={() => setSelectedEvent(null)}
+                                  onSelectEvent={setSelectedEvent}
+                                />
+                              </div>
+                            )}
                           </li>
                         );
                       })}
@@ -289,20 +296,6 @@ export default function ReportAuditTimeline({
                 </div>
               );
             })}
-          </div>
-
-          <div className={`dash-audit-pane-wrap ${selected ? 'dash-audit-pane-wrap--visible' : ''}`}>
-            {selected ? (
-              <AuditDetailPane
-                event={selected}
-                onClose={() => setSelectedEvent(null)}
-                onSelectEvent={setSelectedEvent}
-              />
-            ) : (
-              <div className="dash-audit-pane dash-audit-pane--empty">
-                <p>选择左侧记录查看详情</p>
-              </div>
-            )}
           </div>
         </div>
       )}

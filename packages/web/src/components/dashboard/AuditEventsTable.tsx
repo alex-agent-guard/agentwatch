@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import FilterPillBar from '@/components/dashboard/FilterPillBar';
 import AuditEventDetail from '@/components/dashboard/AuditEventDetail';
 import type { AgentWatchEvent, FinalDecision } from '@/types/events';
@@ -61,7 +61,6 @@ export default function AuditEventsTable({
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const selectedRow = selectedEvent;
 
   return (
     <div className="dash-glass dash-panel dash-panel--elevated p-5 md:p-6 dash-enter" style={{ '--dash-delay': '220ms' } as CSSProperties}>
@@ -124,59 +123,56 @@ export default function AuditEventsTable({
                 const color = riskColor(score, row.final_decision);
                 const isSelected = selectedEvent?.event_id === row.event_id;
                 return (
-                  <tr
-                    key={row.event_id}
-                    onClick={() => setSelectedEvent(isSelected ? null : row)}
-                    className={`dash-table-row ${isSelected ? 'dash-table-row--open' : ''}`}
-                    data-decision={row.final_decision}
-                  >
-                    <td className="px-3 py-4 text-center">
-                      <span className={`dash-table-row__chev ${isSelected ? 'dash-table-row__chev--open' : ''}`} aria-hidden>
-                        ›
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 font-mono text-xs text-text-data">{row.event_id}</td>
-                    <td className="px-4 py-4 text-text-secondary">{actionDisplay(row)}</td>
-                    <td className="px-4 py-4">
-                      <span
-                        className="dash-badge dash-badge--audit"
-                        style={{ color, background: `${color}18`, borderColor: `${color}30` }}
-                      >
-                        {row.final_decision}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 font-mono text-text-data">
-                      {riskScoreDisplay(score)}
-                    </td>
-                    <td className="px-4 py-4 text-xs text-text-muted">
-                      {formatTimestamp(row.timestamp_ms)}
-                    </td>
-                  </tr>
+                  <Fragment key={row.event_id}>
+                    <tr
+                      onClick={() => setSelectedEvent(isSelected ? null : row)}
+                      className={`dash-table-row ${isSelected ? 'dash-table-row--open' : ''}`}
+                      data-decision={row.final_decision}
+                    >
+                      <td className="px-3 py-4 text-center">
+                        <span className={`dash-table-row__chev ${isSelected ? 'dash-table-row__chev--open' : ''}`} aria-hidden>
+                          ›
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 font-mono text-xs text-text-data">{row.event_id}</td>
+                      <td className="px-4 py-4 text-text-secondary">{actionDisplay(row)}</td>
+                      <td className="px-4 py-4">
+                        <span
+                          className="dash-badge dash-badge--audit"
+                          style={{ color, background: `${color}18`, borderColor: `${color}30` }}
+                        >
+                          {row.final_decision}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 font-mono text-text-data">
+                        {riskScoreDisplay(score)}
+                      </td>
+                      <td className="px-4 py-4 text-xs text-text-muted">
+                        {formatTimestamp(row.timestamp_ms)}
+                      </td>
+                    </tr>
+                    {isSelected && (
+                      <tr className="dash-table-detail-row">
+                        <td colSpan={6} className="dash-table-detail-row__cell">
+                          <AuditEventDetail
+                            key={row.event_id}
+                            event={row}
+                            onClose={() => setSelectedEvent(null)}
+                            onSelectEvent={(next) => {
+                              setSelectedEvent(next);
+                              const idx = filtered.findIndex((e) => e.event_id === next.event_id);
+                              if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
+                            }}
+                            compact
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
           </tbody>
         </table>
-      </div>
-
-      <div
-        className={`dash-detail ${selectedRow ? 'dash-detail--open' : ''}`}
-        aria-hidden={!selectedRow}
-      >
-        {selectedRow && (
-          <div className="dash-detail__inner">
-            <AuditEventDetail
-              key={selectedRow.event_id}
-              event={selectedRow}
-              onClose={() => setSelectedEvent(null)}
-              onSelectEvent={(next) => {
-                setSelectedEvent(next);
-                const idx = filtered.findIndex((e) => e.event_id === next.event_id);
-                if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
-              }}
-              compact
-            />
-          </div>
-        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-xs text-text-muted">
@@ -188,7 +184,7 @@ export default function AuditEventsTable({
             type="button"
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="dash-ghost-btn disabled:opacity-40"
+            className="dash-ghost-btn dash-ghost-btn--nav disabled:opacity-40"
           >
             ← 上一页
           </button>
@@ -196,7 +192,7 @@ export default function AuditEventsTable({
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="dash-ghost-btn disabled:opacity-40"
+            className="dash-ghost-btn dash-ghost-btn--nav disabled:opacity-40"
           >
             下一页 →
           </button>
