@@ -177,7 +177,7 @@ export default function ProtectionLanding({
               <ul className="protect-ready-card__notes">
                 <li>一切正常 = 暂无警告或拦截，说明 Agent 运行安全</li>
                 <li>云端仅展示警告与拦截；正常放行不会出现在此页</li>
-                <li>出现注意项或拦截后，连接概览与最近动态会自动更新</li>
+                <li>出现注意项或拦截后，agent 行为记录与最近动态会自动更新</li>
               </ul>
             </section>
           )}

@@ -15,10 +15,10 @@ export default function ClientServiceMatrix({ links }: ClientServiceMatrixProps)
     <section
       className="protect-panel protect-matrix dash-enter"
       style={{ '--dash-delay': '100ms' } as CSSProperties}
-      aria-label="客户端与服务连接"
+      aria-label="Agent 行为记录"
     >
       <div className="protect-panel__head">
-        <h3 className="protect-panel__title">连接概览</h3>
+        <h3 className="protect-panel__title">agent 行为记录</h3>
         <span className="protect-panel__meta">{String(links.length)} 组</span>
       </div>
 

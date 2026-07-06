@@ -59,7 +59,8 @@ export default function BrandIcon({ id, size = 28, className = '' }: BrandIconPr
   }
 
   const cloudGrad = `codex-g-${uid}`;
-  return (
+  if (id === 'codex') {
+    return (
     <svg viewBox="0 0 48 48" {...common}>
       <defs>
         <linearGradient id={cloudGrad} x1="24" y1="10" x2="24" y2="36" gradientUnits="userSpaceOnUse">
@@ -85,5 +86,8 @@ export default function BrandIcon({ id, size = 28, className = '' }: BrandIconPr
         &gt;_
       </text>
     </svg>
-  );
+    );
+  }
+
+  return null;
 }

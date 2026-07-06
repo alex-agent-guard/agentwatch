@@ -1,10 +1,12 @@
 /** 已知 MCP 客户端 / 服务 — 品牌图标映射 */
-export type BrandIconId = 'okx' | 'claude-code' | 'codex' | 'cursor';
+export type BrandIconId = 'okx' | 'claude-code' | 'codex' | 'cursor' | 'hermes';
 
 /** 官方 PNG 素材（圆角由 CSS 统一裁切） */
 export const BRAND_IMAGE_ASSETS: Partial<Record<BrandIconId, string>> = {
   'claude-code': '/assets/images/brands/claude-code.png',
   cursor: '/assets/images/brands/cursor.png',
+  codex: '/assets/images/brands/codex.png',
+  hermes: '/assets/images/brands/hermes.png',
 };
 
 const CLIENT_ICON: Record<string, BrandIconId> = {
@@ -13,6 +15,7 @@ const CLIENT_ICON: Record<string, BrandIconId> = {
   codex: 'codex',
   'openai-codex': 'codex',
   cursor: 'cursor',
+  hermes: 'hermes',
 };
 
 const SERVICE_ICON: Record<string, BrandIconId> = {
@@ -40,5 +43,7 @@ export function brandIconLabel(id: BrandIconId): string {
       return 'Codex';
     case 'cursor':
       return 'Cursor';
+    case 'hermes':
+      return 'Hermes';
   }
 }
