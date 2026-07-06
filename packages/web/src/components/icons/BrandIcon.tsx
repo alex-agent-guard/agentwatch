@@ -18,6 +18,7 @@ function BrandImageIcon({ src, size, className }: { src: string; size: number; c
       className={`brand-icon brand-icon--img ${className}`.trim()}
       draggable={false}
       decoding="async"
+      style={{ width: size, height: size }}
     />
   );
 }

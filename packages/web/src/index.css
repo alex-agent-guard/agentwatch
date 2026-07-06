@@ -6866,31 +6866,33 @@ a.protect-mix__name:hover {
   color: inherit;
   background: transparent;
   box-shadow: none;
-  border-radius: 0;
-  overflow: visible;
+  border-radius: 22%;
+  overflow: hidden;
 }
 
 .protect-matrix__avatar--brand .brand-icon {
   display: block;
-  border-radius: 22%;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.28);
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .brand-icon--img {
+  display: block;
   object-fit: cover;
   object-position: center;
-  background: #ececec;
+  background: transparent;
 }
 
 .protect-activity__leading .protect-matrix__avatar--brand {
   margin-right: 0.15rem;
+  border-radius: 24%;
 }
 
 .protect-activity__leading .protect-matrix__avatar--brand .brand-icon {
-  border-radius: 24%;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border-radius: inherit;
+  box-shadow: none;
 }
 
 .protect-matrix__name {
