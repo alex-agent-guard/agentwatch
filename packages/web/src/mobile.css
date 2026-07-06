@@ -363,9 +363,28 @@
   }
 
   /* Settings */
+  .dash-settings-hero {
+    padding-top: 0.75rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .dash-settings-hero__brand img {
+    height: 3rem;
+    width: 3rem;
+  }
+
+  .dash-settings-panel {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .dash-settings-row {
+    padding: 1rem 1.1rem;
+  }
+
   .dash-settings-row__control {
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 0.5rem;
   }
 
@@ -374,9 +393,25 @@
     min-height: 2.75rem;
   }
 
+  .dash-settings-add {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
+  .dash-settings-agents {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+
   .dash-settings-field {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .dash-audit-row-wrap .dash-audit-export-btn {
+    margin-right: 0.45rem;
+    width: 2.25rem;
+    height: 2.25rem;
   }
 
   /* Activate */

@@ -1165,8 +1165,54 @@ code,
 }
 
 /* Settings — Linear-style rows */
+.dash-settings-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 0 auto 1.35rem;
+  padding: 0.35rem 1rem 0;
+  max-width: 44rem;
+}
+
+.dash-settings-hero__brand {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dash-settings-hero__brand img {
+  height: 3.5rem;
+  width: 3.5rem;
+  border-radius: 0.85rem;
+}
+
+.dash-settings-hero__brand .brand-wordmark {
+  align-items: center;
+}
+
+.dash-settings-hero__brand .brand-wordmark-cn {
+  font-size: 1.25rem;
+}
+
+.dash-settings-hero__brand .brand-wordmark-en {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+}
+
+.dash-settings-hero__label {
+  margin: 0.85rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
 .dash-settings-panel {
   max-width: 44rem;
+  margin-left: auto;
+  margin-right: auto;
   padding: 0;
   overflow: hidden;
 }
@@ -2455,6 +2501,23 @@ code,
   border-bottom: none;
 }
 
+.dash-audit-row-wrap {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.dash-audit-row-wrap .dash-audit-row {
+  flex: 1;
+  min-width: 0;
+  border-bottom: none;
+}
+
+.dash-audit-row-wrap .dash-audit-export-btn {
+  align-self: center;
+  margin-right: 0.65rem;
+}
+
 .dash-audit-row-detail {
   padding: 0.75rem 1rem 1rem;
   background: rgba(77, 159, 255, 0.05);
@@ -2947,6 +3010,86 @@ code,
 .dash-audit-detail__copy:hover {
   color: var(--text-primary);
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dash-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.dash-copy-btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.dash-copy-btn--compact {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dash-copy-btn--inline {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.dash-copy-btn__done {
+  font-size: 0.6875rem;
+  color: var(--accent-green);
+}
+
+.dash-audit-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.dash-audit-export-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dash-audit-export-btn:active {
+  transform: scale(0.94);
+}
+
+.dash-hmac-chain__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dash-hmac-chain__hash-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.dash-hmac-chain__hash-row p {
+  flex: 1;
+  min-width: 0;
 }
 
 .dash-audit-detail__inline-code {

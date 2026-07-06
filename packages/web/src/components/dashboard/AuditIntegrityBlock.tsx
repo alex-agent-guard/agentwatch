@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import CopyButton from '@/components/ui/CopyButton';
 import type { AgentWatchEvent } from '@/types/events';
 import {
   computeHmacIntegrity,
-  exportEvidenceJson,
+  downloadEvidenceJson,
   integrityStatusEmoji,
   integrityStatusLabel,
   shortHmac,
@@ -13,22 +14,7 @@ interface AuditIntegrityBlockProps {
   sessionRows: AgentWatchEvent[];
 }
 
-function CopyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-      <path
-        d="M4.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6A1.5 1.5 0 0 1 3.5 1.5h6A1.5 1.5 0 0 1 11 3"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 export default function AuditIntegrityBlock({ event, sessionRows }: AuditIntegrityBlockProps) {
-  const [copied, setCopied] = useState(false);
   const [exported, setExported] = useState(false);
   const integrity = computeHmacIntegrity(event, sessionRows);
   const chainPosition =
@@ -36,21 +22,8 @@ export default function AuditIntegrityBlock({ event, sessionRows }: AuditIntegri
       ? String(event.sequence_no)
       : null;
 
-  const handleCopyHmac = () => {
-    void navigator.clipboard.writeText(event.hmac).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
   const handleExport = () => {
-    const blob = new Blob([exportEvidenceJson(event)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `agentwatch-${event.event_id}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    downloadEvidenceJson(event);
     setExported(true);
     window.setTimeout(() => setExported(false), 2000);
   };
@@ -71,14 +44,7 @@ export default function AuditIntegrityBlock({ event, sessionRows }: AuditIntegri
           <dt>hmac</dt>
           <dd>
             <code className="dash-integrity-hash">{shortHmac(event.hmac)}</code>
-            <button
-              type="button"
-              className="dash-audit-detail__copy"
-              onClick={handleCopyHmac}
-              title="复制完整 HMAC"
-            >
-              {copied ? '已复制' : <CopyIcon />}
-            </button>
+            <CopyButton text={event.hmac} title="复制完整 HMAC" className="dash-audit-detail__copy" />
           </dd>
         </div>
         {event.prev_hmac?.trim() && (
@@ -86,6 +52,7 @@ export default function AuditIntegrityBlock({ event, sessionRows }: AuditIntegri
             <dt>prev_hmac</dt>
             <dd>
               <code className="dash-integrity-hash">{shortHmac(event.prev_hmac)}</code>
+              <CopyButton text={event.prev_hmac.trim()} title="复制完整 prev_hmac" className="dash-audit-detail__copy" />
             </dd>
           </div>
         )}

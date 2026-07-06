@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AgentOnboarding from '@/components/AgentOnboarding';
 import AppShell from '@/components/dashboard/AppShell';
-import DashPageHeader from '@/components/dashboard/DashPageHeader';
+import BrandLogo from '@/components/BrandLogo';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
 import {
   consumeAgentBindPrefill,
@@ -200,7 +200,13 @@ export default function Settings() {
 
   return (
     <AppShell>
-      <DashPageHeader title="设置" variant="page" eyebrow="Settings" />
+      <header
+        className="dash-settings-hero dash-enter"
+        style={{ '--dash-delay': '0ms' } as CSSProperties}
+      >
+        <BrandLogo to="/" showText className="dash-settings-hero__brand" />
+        <p className="dash-settings-hero__label">设置</p>
+      </header>
 
         {status && (
           <p className="dash-settings-footnote dash-enter" style={{ color: '#8fd4a8' }}>

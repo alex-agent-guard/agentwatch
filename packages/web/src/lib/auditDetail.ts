@@ -165,6 +165,28 @@ export function exportEvidenceJson(event: AgentWatchEvent): string {
   return JSON.stringify(payload, null, 2);
 }
 
+export function downloadEvidenceJson(event: AgentWatchEvent): void {
+  const blob = new Blob([exportEvidenceJson(event)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `agentwatch-${event.event_id}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+export function formatHmacChainExport(events: AgentWatchEvent[]): string {
+  return [...events]
+    .sort((a, b) => a.timestamp_ms - b.timestamp_ms)
+    .map((event) => {
+      const prev = event.prev_hmac?.trim();
+      return prev
+        ? `${event.event_id}\t${event.hmac}\tprev:${prev}`
+        : `${event.event_id}\t${event.hmac}`;
+    })
+    .join('\n');
+}
+
 export function integrityStatusLabel(status: HmacIntegrityStatus): string {
   switch (status) {
     case 'verified':

@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { Fragment, useMemo, useState } from 'react';
 import FilterPillBar from '@/components/dashboard/FilterPillBar';
 import AuditEventDetail from '@/components/dashboard/AuditEventDetail';
+import AuditEventExportButton from '@/components/dashboard/AuditEventExportButton';
 import type { AgentWatchEvent, FinalDecision } from '@/types/events';
 import {
   actionDisplay,
@@ -99,20 +100,21 @@ export default function AuditEventsTable({
               <th className="px-4 py-3.5 font-medium">Decision</th>
               <th className="px-4 py-3.5 font-medium">Risk</th>
               <th className="px-4 py-3.5 font-medium">Time</th>
+              <th className="px-3 py-3.5 font-medium w-10" aria-label="导出" />
             </tr>
           </thead>
           <tbody>
             {loading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={`sk-${String(i)}`} className="dash-table-row">
-                  <td colSpan={6} className="px-5 py-5">
+                  <td colSpan={7} className="px-5 py-5">
                     <div className="dash-skeleton h-4" />
                   </td>
                 </tr>
               ))}
             {!loading && pageRows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-5 py-14 text-center text-text-muted">
+                <td colSpan={7} className="px-5 py-14 text-center text-text-muted">
                   {emptyHint}
                 </td>
               </tr>
@@ -150,10 +152,13 @@ export default function AuditEventsTable({
                       <td className="px-4 py-4 text-xs text-text-muted">
                         {formatTimestamp(row.timestamp_ms)}
                       </td>
+                      <td className="px-3 py-4 text-center">
+                        <AuditEventExportButton event={row} />
+                      </td>
                     </tr>
                     {isSelected && (
                       <tr className="dash-table-detail-row">
-                        <td colSpan={6} className="dash-table-detail-row__cell">
+                        <td colSpan={7} className="dash-table-detail-row__cell">
                           <AuditEventDetail
                             key={row.event_id}
                             event={row}

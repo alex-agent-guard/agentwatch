@@ -4,6 +4,7 @@ import DashCollapsiblePanel from '@/components/dashboard/DashCollapsiblePanel';
 import FilterPillBar from '@/components/dashboard/FilterPillBar';
 import LayoutScaleSlider, { layoutScaleVars, useLayoutScale } from '@/components/dashboard/LayoutScaleSlider';
 import AuditEventDetail from '@/components/dashboard/AuditEventDetail';
+import AuditEventExportButton from '@/components/dashboard/AuditEventExportButton';
 import type { AgentWatchEvent, FinalDecision } from '@/types/events';
 import {
   actionDisplay,
@@ -252,33 +253,36 @@ export default function ReportAuditTimeline({
                         const active = selectedEvent?.event_id === event.event_id;
                         return (
                           <li key={event.event_id} className="dash-audit-rows__item">
-                            <button
-                              type="button"
-                              className={`dash-audit-row dash-audit-row--${event.final_decision.toLowerCase()} ${
-                                active ? 'dash-audit-row--active' : ''
-                              }`}
-                              onClick={() =>
-                                setSelectedEvent((prev) =>
-                                  prev?.event_id === event.event_id ? null : event,
-                                )
-                              }
-                            >
-                              <span
-                                className="dash-audit-row__badge"
-                                style={{
-                                  color,
-                                  borderColor: `${color}35`,
-                                  background: `${color}12`,
-                                }}
+                            <div className="dash-audit-row-wrap">
+                              <button
+                                type="button"
+                                className={`dash-audit-row dash-audit-row--${event.final_decision.toLowerCase()} ${
+                                  active ? 'dash-audit-row--active' : ''
+                                }`}
+                                onClick={() =>
+                                  setSelectedEvent((prev) =>
+                                    prev?.event_id === event.event_id ? null : event,
+                                  )
+                                }
                               >
-                                {event.final_decision}
-                              </span>
-                              <span className="dash-audit-row__tool">{actionDisplay(event)}</span>
-                              <span className="dash-audit-row__time">{formatTime(event.timestamp_ms)}</span>
-                              <span className="dash-audit-row__score" style={{ color }}>
-                                {riskScoreDisplay(event.l1_combined_score)}
-                              </span>
-                            </button>
+                                <span
+                                  className="dash-audit-row__badge"
+                                  style={{
+                                    color,
+                                    borderColor: `${color}35`,
+                                    background: `${color}12`,
+                                  }}
+                                >
+                                  {event.final_decision}
+                                </span>
+                                <span className="dash-audit-row__tool">{actionDisplay(event)}</span>
+                                <span className="dash-audit-row__time">{formatTime(event.timestamp_ms)}</span>
+                                <span className="dash-audit-row__score" style={{ color }}>
+                                  {riskScoreDisplay(event.l1_combined_score)}
+                                </span>
+                              </button>
+                              <AuditEventExportButton event={event} />
+                            </div>
                             {active && (
                               <div className="dash-audit-row-detail">
                                 <AuditDetailPane
