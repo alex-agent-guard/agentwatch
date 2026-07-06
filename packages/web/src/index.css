@@ -4232,6 +4232,16 @@ code,
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
+.auth-stage__inapp-hint {
+  margin: 0;
+  max-width: 18rem;
+  text-align: right;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #ffd89a;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
 .auth-stage__back {
   position: fixed;
   top: 1rem;

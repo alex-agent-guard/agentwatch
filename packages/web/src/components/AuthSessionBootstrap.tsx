@@ -87,7 +87,7 @@ export default function AuthSessionBootstrap() {
         '登录回调超时，请返回登录页重试',
       );
       navigate('/auth', { replace: true });
-    }, 12_000);
+    }, 20_000);
 
     return () => {
       oauthPending = false;

@@ -1,6 +1,11 @@
 import type { Session, User } from '@supabase/supabase-js';
 
 import { clearGuestMode } from '@/lib/session';
+import {
+  getOAuthRedirectUrl,
+  inAppBrowserHint,
+  isRestrictedInAppBrowser,
+} from '@/lib/oauthRedirect';
 import { supabase } from '@/lib/supabase';
 
 const WEB3_STATEMENT = 'Sign in to AgentWatch Dashboard';
@@ -87,19 +92,36 @@ function readWalletAddress(user: User): string | null {
   return null;
 }
 
-/** 整页跳转 GitHub OAuth（避免弹窗卡在 GitHub 错误页无法返回） */
+/** 整页跳转 GitHub OAuth（移动端必须显式 assign，避免跳转被吞） */
 export async function signInWithGitHub(): Promise<{ error: string | null }> {
+  if (isRestrictedInAppBrowser()) {
+    return { error: inAppBrowserHint() };
+  }
+
   clearGuestMode();
   clearAuthCallbackFromUrl();
 
-  const { error } = await supabase.auth.signInWithOAuth({
+  const redirectTo = getOAuthRedirectUrl();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${window.location.origin}${window.location.pathname}`,
+      redirectTo,
+      skipBrowserRedirect: true,
     },
   });
 
-  return { error: error?.message ?? null };
+  if (error) {
+    return { error: error.message };
+  }
+
+  if (!data?.url) {
+    return { error: '无法获取 GitHub 授权地址，请检查网络或稍后重试' };
+  }
+
+  // 移动端 Safari / Chrome 需显式跳转；部分 WebView 不会自动 follow
+  window.location.assign(data.url);
+  return { error: null };
 }
 
 export async function signInWithWallet(): Promise<{ error: string | null }> {

@@ -13,6 +13,7 @@ import {
   signInWithWallet,
 } from '@/lib/auth';
 import { storeAuthRedirect, peekAuthRedirect } from '@/lib/authRedirect';
+import { inAppBrowserHint, isRestrictedInAppBrowser } from '@/lib/oauthRedirect';
 import { resolvePostLoginRoute } from '@/lib/postAuthRoute';
 import { USE_MOCK } from '@/lib/supabase';
 
@@ -86,6 +87,7 @@ export default function Auth() {
   const [busy, setBusy] = useState<AuthBusy>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(!USE_MOCK);
+  const inAppBrowser = isRestrictedInAppBrowser();
 
   useEffect(() => {
     if (USE_MOCK) {
@@ -125,6 +127,10 @@ export default function Auth() {
   }, [navigate, location.state]);
 
   const handleGitHub = async () => {
+    if (inAppBrowser) {
+      setError(inAppBrowserHint());
+      return;
+    }
     setBusy('github');
     setError(null);
     const result = await signInWithGitHub();
@@ -132,6 +138,7 @@ export default function Auth() {
       setBusy(null);
       setError(result.error);
     }
+    // 成功时会整页跳走，不必 setBusy(null)
   };
 
   const handleWallet = async () => {
@@ -220,6 +227,12 @@ export default function Auth() {
                   delay={0.32}
                 />
               </div>
+
+              {inAppBrowser && (
+                <p className="auth-stage__inapp-hint" role="status">
+                  {inAppBrowserHint()}
+                </p>
+              )}
 
               {error && <p className="auth-stage__error">{error}</p>}
 
