@@ -38,7 +38,7 @@ export function initCommand(): void {
       console.info(`[init] 已生成配置 ${configPath}`);
       console.info(`[init] agentId=${agentId} userId=${userId}`);
       console.info(
-        `[init] uploadSecret=${uploadSecret} (Dashboard Settings 注册后 CLI 方可上云)`,
+        `[init] uploadSecret=${uploadSecret} (Dashboard 运行 agentwatch-web3 credentials 可复制)`,
       );
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);

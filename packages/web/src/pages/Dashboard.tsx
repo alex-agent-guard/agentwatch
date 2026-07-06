@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AuditEventsTable from '@/components/dashboard/AuditEventsTable';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import HmacChainPanel from '@/components/dashboard/HmacChainPanel';
@@ -12,29 +12,25 @@ import { useActiveInstall } from '@/hooks/useActiveInstall';
 import { getMockTrendData } from '@/data/mockData';
 import { fetchEvents } from '@/lib/events';
 import { isLiveDataMode, shouldUseDemoData } from '@/lib/session';
-import type { AgentWatchEvent, FinalDecision } from '@/types/events';
+import type { FinalDecision } from '@/types/events';
 import { riskScoreDisplay } from '@/types/events';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { activeInstallId: installId } = useActiveInstall();
-  const tableRef = useRef<HTMLElement>(null);
-  const [events, setEvents] = useState<AgentWatchEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<Awaited<ReturnType<typeof fetchEvents>>['data']>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [tableFilter, setTableFilter] = useState<FinalDecision | 'ALL'>('ALL');
 
   const load = useCallback(
     (mode: 'initial' | 'refresh' | 'poll' = 'initial') => {
-      if (mode === 'initial') setLoading(true);
-      else setRefreshing(true);
+      if (mode === 'refresh' || mode === 'poll') setRefreshing(true);
 
       void fetchEvents({ installId, limit: 50 }).then((res) => {
         setEvents(res.data);
         setError(res.error);
         setLastUpdated(new Date());
-        setLoading(false);
         setRefreshing(false);
       });
     },
@@ -89,18 +85,8 @@ export default function Dashboard() {
     ];
   }, [events]);
 
-  const scrollToTable = (): void => {
-    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  };
-
-  const toggleFilter = (decision: FinalDecision): void => {
-    setTableFilter((prev) => {
-      const next = prev === decision ? 'ALL' : decision;
-      if (next !== 'ALL') {
-        window.setTimeout(scrollToTable, 80);
-      }
-      return next;
-    });
+  const openReports = (decision?: FinalDecision): void => {
+    navigate(decision ? `/reports?decision=${decision}` : '/reports');
   };
 
   return (
@@ -127,28 +113,28 @@ export default function Dashboard() {
             numericValue={stats.total}
             tone="neutral"
             enterIndex={1}
+            interactive
+            onClick={() => openReports()}
           />
           <StatMetric
             label="已拦截"
             value={String(stats.blocks)}
             numericValue={stats.blocks}
-            hint={stats.blocks > 0 ? '需重点关注' : '无拦截'}
+            hint={stats.blocks > 0 ? '查看报告' : '无拦截'}
             tone="danger"
             interactive
-            active={tableFilter === 'BLOCK'}
             enterIndex={2}
-            onClick={() => toggleFilter('BLOCK')}
+            onClick={() => openReports('BLOCK')}
           />
           <StatMetric
             label="警告"
             value={String(stats.warns)}
             numericValue={stats.warns}
-            hint={stats.warns > 0 ? '建议复核' : '无警告'}
+            hint={stats.warns > 0 ? '查看报告' : '无警告'}
             tone="warn"
             interactive
-            active={tableFilter === 'WARN'}
             enterIndex={3}
-            onClick={() => toggleFilter('WARN')}
+            onClick={() => openReports('WARN')}
           />
           <StatMetric
             className="dash-bento__wide"
@@ -166,14 +152,15 @@ export default function Dashboard() {
           <RiskDistributionChart data={distributionData} enterDelay={180} />
         </section>
 
-        <section ref={tableRef} className="mb-5 dash-layer-elevated" aria-label="审计事件">
-          <AuditEventsTable
-            events={events}
-            loading={loading}
-            filter={tableFilter}
-            onFilterChange={setTableFilter}
-          />
-        </section>
+        <div className="dash-reports-cta dash-enter" style={{ '--dash-delay': '200ms' } as CSSProperties}>
+          <p className="dash-reports-cta__text">
+            逐条审计、引擎命中与取证字段在
+            <Link to="/reports" className="dash-reports-cta__link">
+              报告
+            </Link>
+            中查看
+          </p>
+        </div>
 
         <HmacChainPanel events={events} />
       </main>

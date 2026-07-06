@@ -14,7 +14,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
-/** Mock 模式 — 未接 Auth / RLS 时可演示 UI */
+/** Dev Mock — true 时跳过登录、使用 mockData；Live 部署必须 false */
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 
 /** 已登录用户的 Supabase 客户端（RLS 使用 auth.uid()） */

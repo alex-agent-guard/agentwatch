@@ -13,6 +13,7 @@ create table if not exists public.events (
   event_id            text not null,
   tool_name           text not null,
   service_name        text not null default 'tools/call',
+  client_name         text,
   timestamp_ms        bigint not null,
   duration_ms         integer not null default 0,
   arg_count           integer not null default 0,
@@ -26,6 +27,14 @@ create table if not exists public.events (
   final_decision      text not null check (final_decision in ('ALLOW','WARN','BLOCK')),
   chain_depth         integer not null default 0,
   previous_tool       text,
+  client_version      text,
+  tid                 text,
+  sequence_no         integer,
+  l1_scores           jsonb not null default '{}'::jsonb,
+  block_reason        text,
+  consecutive_failures integer,
+  frequency_1m        integer,
+  prev_hmac           text,
   hmac                text not null,
   risk_level          text check (risk_level in ('HIGH','MEDIUM','LOW')),
   -- 若 Supabase 中 risk_level 为 GENERATED ALWAYS 列，INSERT 时勿传该字段（CLI 适配层已省略）
@@ -39,6 +48,9 @@ create index if not exists idx_events_install_ts
 
 create index if not exists idx_events_decision
   on public.events (install_id, final_decision);
+
+create index if not exists idx_events_session_ts
+  on public.events (install_id, session_id, timestamp_ms asc);
 
 alter table public.events enable row level security;
 

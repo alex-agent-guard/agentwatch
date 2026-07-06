@@ -5,8 +5,55 @@ import { supabase } from '@/lib/supabase';
 
 const WEB3_STATEMENT = 'Sign in to AgentWatch Dashboard';
 
-function authRedirectUrl(): string {
-  return `${window.location.origin}${window.location.pathname}`;
+/** OAuth 回调后清理 ?code= / ?error=，避免 HashRouter 重复触发 */
+export function clearAuthCallbackFromUrl(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const url = new URL(window.location.href);
+  const hadAuthParams =
+    url.searchParams.has('code') ||
+    url.searchParams.has('error') ||
+    url.searchParams.has('error_description') ||
+    url.hash.includes('access_token=') ||
+    url.hash.includes('error=');
+
+  if (!hadAuthParams) {
+    return;
+  }
+
+  url.searchParams.delete('code');
+  url.searchParams.delete('error');
+  url.searchParams.delete('error_description');
+  url.searchParams.delete('state');
+  const hash = url.hash.replace(/[#?&](access_token|error|error_description|code)=[^&]*/g, '');
+  url.hash = hash || '#/auth';
+  window.history.replaceState({}, '', url.toString());
+}
+
+/** 从 OAuth 回调 URL 读取错误（GitHub / Supabase 跳回时） */
+export function readAuthCallbackError(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const search = new URLSearchParams(window.location.search);
+  const fromQuery = search.get('error_description') ?? search.get('error');
+  if (fromQuery) {
+    return decodeURIComponent(fromQuery.replace(/\+/g, ' '));
+  }
+  const hash = window.location.hash;
+  const hashMatch = hash.match(/error_description=([^&]+)/);
+  if (hashMatch?.[1]) {
+    return decodeURIComponent(hashMatch[1].replace(/\+/g, ' '));
+  }
+  return null;
+}
+
+/** 退出并重置 OAuth 状态，便于「重新登录」 */
+export async function resetAuthFlow(): Promise<void> {
+  clearGuestMode();
+  clearAuthCallbackFromUrl();
+  await supabase.auth.signOut({ scope: 'local' });
 }
 
 function truncateAddress(address: string): string {
@@ -40,13 +87,15 @@ function readWalletAddress(user: User): string | null {
   return null;
 }
 
+/** 整页跳转 GitHub OAuth（避免弹窗卡在 GitHub 错误页无法返回） */
 export async function signInWithGitHub(): Promise<{ error: string | null }> {
   clearGuestMode();
+  clearAuthCallbackFromUrl();
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: authRedirectUrl(),
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
     },
   });
 
@@ -78,9 +127,75 @@ export async function getSession(): Promise<Session | null> {
   return data.session;
 }
 
+/** OAuth 回调时 Supabase 可能尚未写完 session，轮询等待 */
+export async function waitForAuthSession(timeoutMs = 8000): Promise<Session | null> {
+  const started = performance.now();
+  while (performance.now() - started < timeoutMs) {
+    const session = await getSession();
+    if (session) {
+      return session;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+  }
+  return null;
+}
+
+/** 等 Supabase 从 localStorage 恢复 session，避免误判未登录 */
+export async function bootstrapAuthSession(timeoutMs = 4000): Promise<Session | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (session: Session | null): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      subscription.unsubscribe();
+      window.clearTimeout(timer);
+      resolve(session);
+    };
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') {
+        finish(session);
+      }
+    });
+    const subscription = data.subscription;
+
+    void getSession().then((session) => {
+      if (session) {
+        finish(session);
+      }
+    });
+
+    const timer = window.setTimeout(() => {
+      void getSession().then(finish);
+    }, timeoutMs);
+  });
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   const session = await getSession();
   return session?.user ?? null;
+}
+
+export function getAuthProvider(user: User | null): 'github' | 'wallet' | null {
+  if (!user) {
+    return null;
+  }
+  if (readWalletAddress(user)) {
+    return 'wallet';
+  }
+  const provider =
+    user.app_metadata?.provider ??
+    user.identities?.find((id) => id.provider)?.provider;
+  if (provider === 'github') {
+    return 'github';
+  }
+  if (provider === 'ethereum' || provider === 'web3') {
+    return 'wallet';
+  }
+  return 'github';
 }
 
 export function formatAccountLabel(user: User | null): string | null {

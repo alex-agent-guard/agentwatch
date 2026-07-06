@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentWatch 码池</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      background: #0c0d10;
+      color: #eef1f6;
+      padding: 20px 24px 40px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.35rem; }
+    h2 { margin: 0 0 12px; font-size: 0.95rem; }
+    .sub { color: #8b93a7; font-size: 0.85rem; margin-bottom: 20px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .card {
+      background: #14161c;
+      border: 1px solid #2a2e38;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .card .label { color: #8b93a7; font-size: 0.8rem; }
+    .card .num { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .green { color: #3dd68c; }
+    .blue { color: #4d9fff; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .add-form { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.78rem; color: #8b93a7; }
+    select, button, input {
+      background: #14161c;
+      border: 1px solid #2a2e38;
+      color: #eef1f6;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+    input { min-width: 100px; }
+    button { cursor: pointer; }
+    button.primary { background: #4d9fff; border-color: #4d9fff; color: #061018; font-weight: 600; }
+    button.danger { background: transparent; border-color: rgba(255,107,109,.45); color: #ff8b8d; padding: 4px 8px; font-size: 0.75rem; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #22262f; }
+    th { color: #8b93a7; font-weight: 500; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+    }
+    .pill-active { background: rgba(61,214,140,.15); color: #3dd68c; }
+    .pill-redeemed { background: rgba(77,159,255,.15); color: #4d9fff; }
+    .pill-revoked { background: rgba(255,107,109,.15); color: #ff6b6d; }
+    .err { background: rgba(255,107,109,.12); border: 1px solid rgba(255,107,109,.35); color: #ffc4c5; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .ok { background: rgba(61,214,140,.12); border: 1px solid rgba(61,214,140,.35); color: #b8f0d0; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .batch-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .batch { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; border: 1px solid #2a2e38; color: #aab2c4; }
+  </style>
+</head>
+<body>
+  <h1>AgentWatch 码池</h1>
+  <p class="sub">本地管理 · 添加 / 删除 / 自动刷新 · 无需登录</p>
+  <div id="msg" style="display:none"></div>
+  <div class="stats" id="stats"></div>
+  <div class="batch-row" id="batches"></div>
+
+  <div class="card">
+    <h2>添加激活码</h2>
+    <div class="add-form">
+      <div class="field">
+        <label for="addCount">数量</label>
+        <input id="addCount" type="number" min="1" max="500" value="10" />
+      </div>
+      <div class="field">
+        <label for="addBatch">批次名</label>
+        <input id="addBatch" type="text" placeholder="launch-02" />
+      </div>
+      <button type="button" class="primary" id="addBtn">生成并入库</button>
+    </div>
+    <p class="sub" style="margin:10px 0 0">同时写入本文件夹 CSV（发码用-批次名.csv）</p>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>激活码列表</strong>
+      <select id="statusFilter">
+        <option value="">全部状态</option>
+        <option value="active">未使用</option>
+        <option value="redeemed">已兑换</option>
+        <option value="revoked">已作废</option>
+      </select>
+      <select id="batchFilter"><option value="">全部批次</option></select>
+      <button type="button" id="refreshBtn">刷新</button>
+      <span class="sub" id="syncAt"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>激活码</th><th>批次</th><th>状态</th><th>兑换账户</th><th>兑换时间</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const STATUS = { active: '未使用', redeemed: '已兑换', revoked: '已作废' };
+    let allRows = [];
+
+    function fmt(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleString('zh-CN', { hour12: false });
+    }
+
+    function showMsg(text, ok) {
+      const el = document.getElementById('msg');
+      el.className = ok ? 'ok' : 'err';
+      el.textContent = text;
+      el.style.display = 'block';
+      if (ok) setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    function renderStats(s) {
+      document.getElementById('stats').innerHTML = `
+        <div class="card"><div class="label">总码数</div><div class="num">${s.total}</div></div>
+        <div class="card"><div class="label">未使用</div><div class="num green">${s.active}</div></div>
+        <div class="card"><div class="label">已兑换</div><div class="num blue">${s.redeemed}</div></div>
+        <div class="card"><div class="label">已作废</div><div class="num">${s.revoked}</div></div>`;
+    }
+
+    function renderBatches(batches) {
+      document.getElementById('batches').innerHTML = batches.map(b =>
+        `<span class="batch">${b.batch_id} · ${b.redeemed}/${b.total} 已用</span>`
+      ).join('');
+      const sel = document.getElementById('batchFilter');
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">全部批次</option>' +
+        batches.map(b => `<option value="${b.batch_id}">${b.batch_id}</option>`).join('');
+      sel.value = cur;
+    }
+
+    async function deleteRow(id, display) {
+      if (!confirm(`确定删除未使用的码？\n${display}`)) return;
+      try {
+        const res = await fetch(`/api/codes/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error);
+        showMsg(`已删除 ${data.display}`, true);
+        await load();
+      } catch (e) {
+        showMsg(e.message || String(e), false);
+      }
+    }
+
+    function renderTable() {
+      const st = document.getElementById('statusFilter').value;
+      const bt = document.getElementById('batchFilter').value;
+      const rows = allRows.filter(r =>
+        (!st || r.status === st) && (!bt || (r.batch_id || '(无批次)') === bt)
+      );
+      document.getElementById('tbody').innerHTML = rows.length ? rows.map(r => `
+        <tr>
+          <td class="mono">${r.display}</td>
+          <td>${r.batch_id || '—'}</td>
+          <td><span class="pill pill-${r.status}">${STATUS[r.status] || r.status}</span></td>
+          <td>${r.redeemer || '—'}</td>
+          <td>${fmt(r.redeemed_at)}</td>
+          <td>${r.status === 'active'
+            ? `<button type="button" class="danger" data-del="${r.id}" data-display="${r.display}">删除</button>`
+            : '<span class="sub">—</span>'}</td>
+        </tr>`).join('') : '<tr><td colspan="6" style="color:#8b93a7;text-align:center;padding:24px">暂无数据</td></tr>';
+
+      document.querySelectorAll('[data-del]').forEach((btn) => {
+        btn.onclick = () => deleteRow(btn.dataset.del, btn.dataset.display);
+      });
+    }
+
+    async function load() {
+      document.getElementById('err')?.remove();
+      try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error);
+        renderStats(data.stats);
+        renderBatches(data.batches);
+        allRows = data.rows;
+        renderTable();
+        document.getElementById('syncAt').textContent = '更新于 ' + fmt(data.fetchedAt);
+      } catch (e) {
+        showMsg(e.message || String(e), false);
+      }
+    }
+
+    async function addCodes() {
+      const count = Number(document.getElementById('addCount').value);
+      const batch_id = document.getElementById('addBatch').value.trim();
+      const btn = document.getElementById('addBtn');
+      btn.disabled = true;
+      btn.textContent = '生成中…';
+      try {
+        const res = await fetch('/api/codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ count, batch_id: batch_id || undefined }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || data.error);
+        showMsg(`已添加 ${data.added} 个码（批次 ${data.batch_id}）`, true);
+        document.getElementById('addBatch').value = data.batch_id;
+        await load();
+      } catch (e) {
+        showMsg(e.message || String(e), false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '生成并入库';
+      }
+    }
+
+    document.getElementById('refreshBtn').onclick = load;
+    document.getElementById('addBtn').onclick = addCodes;
+    document.getElementById('statusFilter').onchange = renderTable;
+    document.getElementById('batchFilter').onchange = renderTable;
+    load();
+    setInterval(load, 8000);
+  </script>
+</body>
+</html>

@@ -18,3 +18,7 @@ packages/local/logs/
 # Large web video assets (host separately or use LFS)
 packages/web/public/assets/videos/*.mp4
 packages/web/public/assets/videos/*.mov
+
+# Generated Live activation codes (plaintext — never commit)
+out/
+*.tsbuildinfo

@@ -43,6 +43,8 @@ import type {
 export interface AsyncLoggerCloudInit {
   config: CloudConfig;
   dbPath?: string;
+  /** 被代理 MCP 服务标识 — 上报 events.service_name */
+  mcpServiceName?: string;
   /** 测试注入 — 覆盖默认 EventUploader 实例 */
   uploader?: EventUploader;
 }
@@ -116,6 +118,7 @@ export class AsyncLogger implements ILogger {
           endpoint: config.endpoint,
           apiKey: config.apiKey ?? '',
           ...(config.uploadSecret ? { uploadSecret: config.uploadSecret } : {}),
+          ...(cloudInit.mcpServiceName ? { mcpServiceName: cloudInit.mcpServiceName } : {}),
           logger: this,
           enabled: config.enabled,
           flushIntervalMs: config.batch.flushIntervalMs,
@@ -428,7 +431,7 @@ export class AsyncLogger implements ILogger {
         tool: context.tool,
         dec: decision,
         score: result.score,
-        dur_ms: 0,
+        dur_ms: result.detectionDurationMs ?? 0,
         ...(context.sequenceNo !== undefined ? { sequence_no: context.sequenceNo } : {}),
         params: {
           ...mergedParams,
@@ -684,22 +687,29 @@ export class AsyncLogger implements ILogger {
     request: JSONRPCRequest,
   ): Record<string, unknown> {
     const rpcParams = request.params ?? {};
+    const merged: Record<string, unknown> = { ...params };
+
     const rawMeta = rpcParams['_meta'];
-    if (rawMeta === null || typeof rawMeta !== 'object' || Array.isArray(rawMeta)) {
-      return params;
+    if (rawMeta !== null && typeof rawMeta === 'object' && !Array.isArray(rawMeta)) {
+      const meta = rawMeta as Record<string, unknown>;
+      if (meta['consecutive_failures'] !== undefined) {
+        merged['consecutive_failures'] = meta['consecutive_failures'];
+      }
+      if (meta['frequency_1m'] !== undefined) {
+        merged['frequency_1m'] = meta['frequency_1m'];
+      }
+      if (meta['markov'] !== undefined) {
+        merged['markov'] = meta['markov'];
+      }
     }
 
-    const meta = rawMeta as Record<string, unknown>;
-    const merged: Record<string, unknown> = { ...params };
-    if (meta['consecutive_failures'] !== undefined) {
-      merged['consecutive_failures'] = meta['consecutive_failures'];
+    if (typeof rpcParams['_agentwatch_client_name'] === 'string') {
+      merged['_agentwatch_client_name'] = rpcParams['_agentwatch_client_name'];
     }
-    if (meta['frequency_1m'] !== undefined) {
-      merged['frequency_1m'] = meta['frequency_1m'];
+    if (typeof rpcParams['_agentwatch_client_version'] === 'string') {
+      merged['_agentwatch_client_version'] = rpcParams['_agentwatch_client_version'];
     }
-    if (meta['markov'] !== undefined) {
-      merged['markov'] = meta['markov'];
-    }
+
     return merged;
   }
 

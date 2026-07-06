@@ -15,8 +15,13 @@ fi
 
 send() {
   printf '%s\n' "$1" > "$PIPE"
-  echo "[phase-d] sent: $(echo "$1" | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get("params",{}).get("name","?"), "id="+str(d.get("id")))' 2>/dev/null || echo ok)"
+  echo "[phase-d] sent: $(echo "$1" | python3 -c 'import sys,json; d=json.load(sys.stdin); m=d.get("method","?"); p=d.get("params") or {}; print(m if m!="tools/call" else p.get("name","tools/call"), "id="+str(d.get("id")))' 2>/dev/null || echo ok)"
 }
+
+# MCP initialize — Proxy 从此采集 client_name（连接概览图标依赖此步）
+CLIENT_NAME="${AGENTWATCH_DEMO_CLIENT:-claude-code}"
+send "{\"jsonrpc\":\"2.0\",\"id\":\"init-${TS}\",\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"${CLIENT_NAME}\",\"version\":\"1.0.0\"}}}"
+sleep 0.4
 
 if [ "$BLOCK_ONLY" = "block-only" ]; then
   send "{\"jsonrpc\":\"2.0\",\"id\":\"block-${TS}\",\"method\":\"tools/call\",\"params\":{\"name\":\"transfer\",\"arguments\":{\"amount\":500000,\"to\":\"0x1234\"}}}"

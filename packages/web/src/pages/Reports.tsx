@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashPageHeader from '@/components/dashboard/DashPageHeader';
 import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
 import MobileTabBar from '@/components/dashboard/MobileTabBar';
@@ -10,17 +11,29 @@ import { fetchEvents } from '@/lib/events';
 import type { AgentWatchEvent } from '@/types/events';
 
 export default function Reports() {
+  const [searchParams] = useSearchParams();
   const { activeInstallId: installId, agents } = useActiveInstall();
   const [events, setEvents] = useState<AgentWatchEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const agentLabel = agents.find((agent) => agent.install_id === installId)?.label;
 
-  useEffect(() => {
+  const initialDecision = useMemo(() => {
+    const raw = searchParams.get('decision');
+    if (raw === 'BLOCK' || raw === 'WARN' || raw === 'ALLOW') return raw;
+    return 'ALL' as const;
+  }, [searchParams]);
+
+  const load = useCallback(() => {
+    setLoading(true);
     void fetchEvents({ installId, limit: 100 }).then((res) => {
       setEvents(res.data);
       setLoading(false);
     });
   }, [installId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="relative flex min-h-screen">
@@ -33,7 +46,11 @@ export default function Reports() {
 
         <ReportBrief events={events} loading={loading} agentLabel={agentLabel} />
 
-        <ReportAuditTimeline events={events} loading={loading} />
+        <ReportAuditTimeline
+          events={events}
+          loading={loading}
+          initialDecision={initialDecision}
+        />
       </main>
     </div>
   );

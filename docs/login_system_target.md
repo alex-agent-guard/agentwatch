@@ -3,17 +3,19 @@
 > **文档目的**：对齐人类登录、多 Agent 绑定、CLI 上报鉴权三套机制；作为 Phase 04 之后 Supabase / 前端 / CLI 配套改动的唯一参考。  
 > **最后更新**：2026-07-05  
 > **关联文档**：`integration_plan_phase04.md`、`supabase/events_ddl.sql`  
-> **已确认选型**（产品拍板）：
-> 1. v1 登录：**Magic Link 邮件免密**，不做邮箱密码体系；
-> 2. v1 绑定：**用户手动粘贴 `install_id`** 完成账号与 Agent 实例关联；
-> 3. CLI 上报：**废弃 anon + `x-install-id`**，改为 **`upload_secret` + 服务端 `service_role` 写入**，杜绝伪造审计日志。
+> **已确认选型**（产品拍板 · 2026-07 修订）：
+> 1. v1 登录：**GitHub OAuth** + **Wallet（SIWE / Ethereum）**；**不做** Magic Link / 邮箱密码；
+> 2. v1 绑定：**用户手动粘贴 `install_id`** + **`upload_secret`** 完成账号与 Agent 关联；
+> 3. CLI 上报：**废弃 anon + `x-install-id`**，改为 **`upload_secret` + Edge Function / service_role 写入**。
+>
+> **落地手册（逐步操作）**：[`docs/LOGIN_SETUP.md`](./LOGIN_SETUP.md)
 
 ---
 
 ## 一、North Star（登录系统要证明什么）
 
 ```text
-人类 Magic Link 登录 Dashboard
+人类 GitHub / Wallet 登录 Dashboard
   → Settings 粘贴 install_id（= CLI agentId）完成绑定
   → Dashboard / Reports 只读「本人绑定的 install_id」下的 events
   → CLI Proxy 本地 L0/L1 + HMAC 不变
@@ -30,7 +32,7 @@
 
 | 通道 | 对象 | 凭证 | 用途 |
 |------|------|------|------|
-| **人类通道** | 浏览器 Dashboard 用户 | Supabase Auth Session（Magic Link） | 登录、绑定 install_id、读 events |
+| **人类通道** | 浏览器 Dashboard 用户 | Supabase Auth Session（GitHub 或 Wallet） | 登录、绑定 install_id、读 events |
 | **Agent 通道** | 本地 CLI / Proxy | `install_id` + `upload_secret`（`~/.agentwatch/config.yaml`） | 脱敏 events 上报（无 Dashboard Session） |
 
 **命名约定（全项目统一）**
@@ -49,7 +51,7 @@
 ```mermaid
 flowchart TB
   subgraph human [人类通道 — Dashboard]
-    Auth[Supabase Auth Magic Link]
+    Auth[Supabase Auth GitHub / Wallet]
     UA[user_agents 绑定表]
     Dash[Dashboard / Reports / Settings]
     Auth --> Dash
@@ -96,7 +98,7 @@ flowchart TB
 -- ─── 0. 扩展 ───
 create extension if not exists "pgcrypto";
 
--- ─── 1. 用户资料（Magic Link 注册后自动创建）───
+-- ─── 1. 用户资料（OAuth / Wallet 注册后自动创建）───
 create table if not exists public.profiles (
   id            uuid primary key references auth.users(id) on delete cascade,
   email         text,
@@ -497,24 +499,27 @@ return Response.json(data);
 
 ---
 
-## 六、Magic Link 登录（v1）
+## 六、GitHub + Wallet 登录（v1）
+
+> **逐步操作**：[`LOGIN_SETUP.md`](./LOGIN_SETUP.md)
 
 ### 6.1 Supabase Dashboard 配置
 
-1. Authentication → Providers → **Email**：开启 **Magic Link**，关闭 Email + Password（或禁用「Confirm password」注册）。
-2. Site URL / Redirect URLs：加入本地与生产 Dashboard 地址（如 `http://localhost:5173/#/dashboard`）。
-3. Email 模板：可选品牌化「Agent Watch 登录链接」。
+1. **GitHub**：Authentication → Providers → GitHub → Client ID / Secret → Enable  
+   - Redirect URL：`http://localhost:5173/`（本地）及生产域名（**根路径，不带 `#`**）
+2. **Wallet**：Authentication → Providers → Web3 Wallet → 启用 **Ethereum**（SIWE）
+3. **不做**：Magic Link、邮箱密码、OAuth 以外的 Provider
 
 ### 6.2 前端会话流
 
 ```text
-/auth 输入邮箱 → signInWithOtp({ email, options: { emailRedirectTo } })
-  → 用户点邮件链接 → Supabase 建立 session → 跳转 /dashboard
-  → supabase.auth.getSession() 持久化
+/auth → GitHub OAuth 或 Wallet SIWE
+  → Supabase Session（auth.uid()）
+  → AuthSessionBootstrap 处理 OAuth ?code= 回调 → /dashboard
   → 未登录访问 /dashboard /reports /settings → 重定向 /auth
 ```
 
-**不做**：密码注册、密码重置、OAuth（v2 可选 Wallet SIWE）。
+**Dev Mock**：`VITE_USE_MOCK=true` 时可跳过登录看 UI（Auth 页「Dev Mock →」）；**Live 构建不提供此入口**。
 
 ---
 
@@ -526,7 +531,7 @@ return Response.json(data);
 1. CLI: agentwatch init
    → 得到 agentId（= install_id）与 upload_secret（终端展示一次）
 
-2. Web: /auth Magic Link 登录
+2. Web: /auth → GitHub 或 Wallet 登录
 
 3. Settings → 「添加 Agent」
    → 粘贴 install_id → 调用 bind_install_id RPC
@@ -551,8 +556,8 @@ return Response.json(data);
 | 优先级 | 文件 | 改动 |
 |--------|------|------|
 | P0 | `packages/web/src/lib/supabase.ts` | 导出带 `auth` 的 client；移除 `getSupabaseForInstall` 的 `x-install-id` 读路径；`fetchEvents` 用 **session + RLS** |
-| P0 | `packages/web/src/lib/auth.ts` | **新建**：`signInWithMagicLink`、`signOut`、`onAuthStateChange`、`requireAuth` |
-| P0 | `packages/web/src/pages/Auth.tsx` | 去掉 Password 字段；`signInWithOtp`；成功提示「请查收邮件」；移除假登录跳转（保留「Demo 跳过」仅 `VITE_USE_MOCK=true`） |
+| P0 | `packages/web/src/lib/auth.ts` | `signInWithGitHub`、`signInWithWallet`、`signOut`、`onAuthStateChange` |
+| P0 | `packages/web/src/pages/Auth.tsx` | GitHub + Wallet 按钮；Dev Mock 仅 `VITE_USE_MOCK=true` |
 | P0 | `packages/web/src/App.tsx` | 保护路由 `/dashboard`、`/reports`、`/settings` |
 | P0 | `packages/web/src/pages/Settings.tsx` | Agent 列表：粘贴 `install_id` 绑定；粘贴 `upload_secret` 注册；展示 `secret_prefix` 状态 |
 | P0 | `packages/web/src/lib/userAgents.ts` | **新建**：`listUserAgents`、`bindInstallId`、`registerUploadSecret`（RPC 封装） |
@@ -601,7 +606,7 @@ VITE_USE_MOCK=false
 
 ## 十一、验收标准（Login v1 Done）
 
-- [ ] Magic Link 登录成功；未登录无法访问 Dashboard 真数据
+- [ ] GitHub 或 Wallet 登录成功；未登录无法访问 Dashboard 真数据
 - [ ] `bind_install_id` 后 `user_agents` 有行；重复粘贴幂等
 - [ ] `register_upload_secret` 后 CLI 上报成功；错误 secret 返回 401
 - [ ] 用户 A 无法 SELECT 用户 B 的 `install_id` events
@@ -616,12 +621,12 @@ VITE_USE_MOCK=false
 ```text
 Step 1  Supabase：执行 §四 SQL + 部署 Edge Function
 Step 2  CLI：init 生成 secret + supabaseCloudTransport 改走 Edge Function
-Step 3  Web：Magic Link + 路由守卫
+Step 3  Web：GitHub / Wallet + 路由守卫（见 LOGIN_SETUP.md）
 Step 4  Web：Settings 绑定 + secret 注册 + Dashboard 多 Agent
 Step 5  端到端：phase-d-test-cases → Dashboard Live → 黑客松录屏
 ```
 
-**与 OKX 黑客松**：7/17 前若 Auth 未完工，可用 `VITE_USE_MOCK=true` 或 **临时** Demo 账号完成录屏；**提交表单中声明** Login v1 已设计并完成 SQL/RPC（附本文档链接）。正式 RLS 切换应在 Demo 录屏完成后执行，避免录屏期间 Supabase 空数据。
+**与 OKX 黑客松**：Live 登录见 `docs/LOGIN_SETUP.md`；Supabase 未就绪时可临时 `VITE_USE_MOCK=true` 录 UI，提交表单声明 Auth v1 设计已完成。
 
 ---
 
@@ -631,7 +636,7 @@ Step 5  端到端：phase-d-test-cases → Dashboard Live → 黑客松录屏
 |------|-----------------|--------------|
 | Dashboard 读 | anon + `x-install-id` | authenticated + `user_agents` RLS |
 | CLI 写 | anon + `x-install-id` | Edge Function + `upload_secret` + service_role RPC |
-| 登录 | 无 / 假 Auth UI | Magic Link |
+| 登录 | 无 / 假 Auth UI | GitHub + Wallet（SIWE） |
 | 多 Agent | localStorage 单 install_id | `user_agents` 表 + UI 切换 |
 | `AGENTWATCH_API_KEY` | anon 写库 | **废弃写库**；CLI 改用 `AGENTWATCH_UPLOAD_SECRET` |
 
@@ -639,7 +644,8 @@ Step 5  端到端：phase-d-test-cases → Dashboard Live → 黑客松录屏
 
 ## 十四、参考
 
-- [Supabase Magic Link](https://supabase.com/docs/guides/auth/auth-email-passwordless)
+- [Supabase GitHub OAuth](https://supabase.com/docs/guides/auth/social-login/auth-github)
+- [Supabase Web3 Wallet / SIWE](https://supabase.com/docs/guides/auth/auth-web3)
 - [Supabase Edge Functions](https://supabase.com/docs/guides/functions)
 - [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 - 项目内：`docs/supabase/events_ddl.sql`、`docs/integration_plan_phase04.md`

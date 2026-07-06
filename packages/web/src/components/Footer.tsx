@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import BrandLogo from '@/components/BrandLogo';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 
 export default function Footer() {
   return (
@@ -15,23 +16,45 @@ export default function Footer() {
         <div>
           <h4 className="type-heading mb-3 text-sm text-text-primary">产品</h4>
           <ul className="type-body-cn space-y-2 text-sm text-text-secondary">
-            <li><Link to="/dashboard" className="hover:text-text-primary">仪表盘</Link></li>
-            <li><Link to="/reports" className="hover:text-text-primary">报告</Link></li>
+            <li>
+              <Link
+                to="/home"
+                className="hover:text-text-primary"
+                onClick={() => storeAuthRedirect('/home')}
+              >
+                首页
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/dashboard"
+                className="hover:text-text-primary"
+                onClick={() => storeAuthRedirect('/dashboard')}
+              >
+                仪表盘
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/reports"
+                className="hover:text-text-primary"
+                onClick={() => storeAuthRedirect('/reports')}
+              >
+                报告
+              </Link>
+            </li>
             <li><Link to="/settings" className="hover:text-text-primary">设置</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="type-heading mb-3 text-sm text-text-primary">资源</h4>
-          <ul className="type-body-cn space-y-2 text-sm text-text-secondary">
-            <li><a href="https://github.com" className="hover:text-text-primary">文档</a></li>
-            <li><a href="https://www.npmjs.com/package/@agentwatch-web3/cli" className="hover:text-text-primary">CLI npm</a></li>
-          </ul>
+          <h4 className="type-heading mb-3 text-sm text-text-primary">联系</h4>
+          <p className="type-body-cn text-sm text-text-secondary">alexai66</p>
         </div>
       </div>
 
       <div className="type-caption-en border-t border-white/5 py-6 text-center text-[10px] text-text-muted">
-        © {new Date().getFullYear()} AgentWatch · Agent Runtime Security
+        © {new Date().getFullYear()} AgentWatch · 联系 alexai66
       </div>
     </footer>
   );

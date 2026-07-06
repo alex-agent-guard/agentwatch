@@ -10,6 +10,7 @@ import SectionAmbient from '@/components/SectionAmbient';
 import ScrollRevealHeading from '@/components/ScrollRevealHeading';
 import CutReveal from '@/components/CutReveal';
 import { VIDEO_ASSETS } from '@/data/videoAssets';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 
 /** 流程顺序：发现 → 拦截 → 审计 */
 const featureCards = [
@@ -103,9 +104,22 @@ export default function Home() {
           <p className="type-body-cn mt-5 text-lg text-white/58 md:text-xl">
             本地部署 · 链式验真 · 云端洞察
           </p>
-          <Link to="/dashboard" className="okx-btn-white type-heading mt-8 inline-block text-sm">
+          <Link
+            to="/home"
+            className="okx-btn-white type-heading mt-8 inline-block text-sm"
+            onClick={() => storeAuthRedirect('/home')}
+          >
             开始使用
           </Link>
+          <p className="type-body-cn mt-5">
+            <Link
+              to="/preview/home"
+              className="text-[#8fd4a8]/90 underline underline-offset-4 transition hover:text-[#8fd4a8]"
+            >
+              Demo
+            </Link>
+            <span className="text-white/38"> · 无需登录</span>
+          </p>
         </div>
       </section>
 

@@ -2,7 +2,7 @@ import { USE_MOCK } from '@/lib/supabase';
 
 export const GUEST_MODE_KEY = 'agentwatch_guest_mode';
 
-/** 游客模式 — 无需登录，Dashboard 展示 Demo 数据 */
+/** Dev Mock 游客标记（Live 模式下 enterGuestMode 为 no-op） */
 export function isGuestMode(): boolean {
   if (typeof window === 'undefined') {
     return false;
@@ -11,6 +11,9 @@ export function isGuestMode(): boolean {
 }
 
 export function enterGuestMode(): void {
+  if (!USE_MOCK) {
+    return;
+  }
   window.localStorage.setItem(GUEST_MODE_KEY, '1');
 }
 
@@ -18,12 +21,12 @@ export function clearGuestMode(): void {
   window.localStorage.removeItem(GUEST_MODE_KEY);
 }
 
-/** Mock 环境变量 或 游客模式 → 使用 Demo 数据，不走 Supabase RLS */
+/** Dev Mock 或历史 guest 标记 → Demo 数据；Live 模式必须 GitHub/Wallet 登录 */
 export function shouldUseDemoData(): boolean {
-  return USE_MOCK || isGuestMode();
+  return USE_MOCK;
 }
 
-/** 已 GitHub 登录且非 Demo → 读 Supabase Live 数据 */
+/** GitHub / Wallet 已登录且 Live 配置 → 读 Supabase */
 export function isLiveDataMode(): boolean {
-  return !shouldUseDemoData();
+  return !USE_MOCK;
 }

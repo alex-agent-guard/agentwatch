@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import DashCollapsiblePanel from '@/components/dashboard/DashCollapsiblePanel';
 import FilterPillBar from '@/components/dashboard/FilterPillBar';
 import LayoutScaleSlider, { layoutScaleVars, useLayoutScale } from '@/components/dashboard/LayoutScaleSlider';
-import { RiskExplanation } from '@/components/dashboard/RiskExplanation';
+import AuditEventDetail from '@/components/dashboard/AuditEventDetail';
 import type { AgentWatchEvent, FinalDecision } from '@/types/events';
 import {
   actionDisplay,
@@ -14,6 +14,8 @@ import {
 interface ReportAuditTimelineProps {
   events: AgentWatchEvent[];
   loading?: boolean;
+  /** URL ?decision=BLOCK|WARN 等 — 初始筛选 */
+  initialDecision?: FinalDecision | 'ALL';
 }
 
 const FILTER_OPTIONS: Array<{ value: FinalDecision | 'ALL'; label: string }> = [
@@ -22,12 +24,6 @@ const FILTER_OPTIONS: Array<{ value: FinalDecision | 'ALL'; label: string }> = [
   { value: 'WARN', label: 'WARN' },
   { value: 'ALLOW', label: 'ALLOW' },
 ];
-
-const DECISION_LABEL: Record<FinalDecision, string> = {
-  BLOCK: '已拦截',
-  WARN: '警告',
-  ALLOW: '放行',
-};
 
 function formatDateKey(ms: number): string {
   return new Date(ms).toLocaleDateString('zh-CN', {
@@ -59,63 +55,20 @@ function groupByDate(items: AgentWatchEvent[]): Array<[string, AgentWatchEvent[]
 function AuditDetailPane({
   event,
   onClose,
+  onSelectEvent,
 }: {
   event: AgentWatchEvent;
   onClose: () => void;
+  onSelectEvent: (event: AgentWatchEvent) => void;
 }) {
-  const color = riskColor(event.l1_combined_score, event.final_decision);
-
   return (
     <div className="dash-audit-pane">
-      <div className="dash-audit-pane__head">
-        <span
-          className="dash-audit-item__badge"
-          style={{ color, borderColor: `${color}40`, background: `${color}14` }}
-        >
-          {event.final_decision}
-        </span>
-        <button type="button" className="dash-text-btn" onClick={onClose}>
-          关闭
-        </button>
-      </div>
-      <p className="dash-audit-pane__tool">{actionDisplay(event)}</p>
-      <div className="dash-audit-detail dash-audit-detail--pane">
-        <div className="dash-audit-detail__row">
-          <span className="dash-audit-detail__label">Event</span>
-          <code className="dash-audit-detail__code dash-audit-detail__code--break">
-            {event.event_id}
-          </code>
-        </div>
-        <div className="dash-audit-detail__row">
-          <span className="dash-audit-detail__label">决策</span>
-          <span className="dash-audit-detail__value">
-            {DECISION_LABEL[event.final_decision]} · {riskScoreDisplay(event.l1_combined_score)}
-          </span>
-        </div>
-        <div className="dash-audit-detail__row">
-          <span className="dash-audit-detail__label">HMAC</span>
-          <code className="dash-audit-detail__code dash-audit-detail__code--break">
-            {event.hmac}
-          </code>
-        </div>
-        <RiskExplanation event={event} />
-        <div className="dash-audit-detail__grid">
-          <div>
-            <span className="dash-audit-detail__label">Session</span>
-            <p className="dash-audit-detail__value dash-audit-detail__value--mono">
-              {event.session_id.slice(0, 14)}…
-            </p>
-          </div>
-          <div>
-            <span className="dash-audit-detail__label">耗时</span>
-            <p className="dash-audit-detail__value">{event.duration_ms} ms</p>
-          </div>
-          <div>
-            <span className="dash-audit-detail__label">链深</span>
-            <p className="dash-audit-detail__value">{event.chain_depth}</p>
-          </div>
-        </div>
-      </div>
+      <AuditEventDetail
+        key={event.event_id}
+        event={event}
+        onClose={onClose}
+        onSelectEvent={onSelectEvent}
+      />
     </div>
   );
 }
@@ -130,13 +83,21 @@ function readAuditOpen(): boolean {
   }
 }
 
-export default function ReportAuditTimeline({ events, loading }: ReportAuditTimelineProps) {
-  const [filter, setFilter] = useState<FinalDecision | 'ALL'>('ALL');
+export default function ReportAuditTimeline({
+  events,
+  loading,
+  initialDecision = 'ALL',
+}: ReportAuditTimelineProps) {
+  const [filter, setFilter] = useState<FinalDecision | 'ALL'>(initialDecision);
   const [search, setSearch] = useState('');
   const [panelOpen, setPanelOpen] = useState(readAuditOpen);
   const [layoutScale, setLayoutScale] = useLayoutScale();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<AgentWatchEvent | null>(null);
   const [openDates, setOpenDates] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setFilter(initialDecision);
+  }, [initialDecision]);
 
   const sorted = useMemo(
     () => [...events].sort((a, b) => b.timestamp_ms - a.timestamp_ms),
@@ -165,7 +126,13 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
     return { total: filtered.length, blocks, warns };
   }, [filtered]);
 
-  const selected = filtered.find((e) => e.event_id === selectedId) ?? null;
+  const selected = selectedEvent;
+
+  useEffect(() => {
+    if (selectedEvent && !filtered.some((e) => e.event_id === selectedEvent.event_id)) {
+      setSelectedEvent(null);
+    }
+  }, [filtered, selectedEvent]);
 
   useEffect(() => {
     if (groups.length > 0) {
@@ -176,10 +143,10 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
   }, [filter, search, groups.length]);
 
   useEffect(() => {
-    if (selectedId && !filtered.some((e) => e.event_id === selectedId)) {
-      setSelectedId(null);
+    if (initialDecision !== 'ALL' && filtered.length > 0 && !selectedEvent) {
+      setSelectedEvent(filtered[0] ?? null);
     }
-  }, [filtered, selectedId]);
+  }, [initialDecision, filtered, selectedEvent]);
 
   const toggleDate = (date: string) => {
     setOpenDates((prev) => {
@@ -231,7 +198,8 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
 
   return (
     <DashCollapsiblePanel
-      title="审计记录"
+      title="审计事件"
+      subtitle="规则命中 · 会话链 · 找病因"
       collapseSummary={`${String(summary.total)} 条 · ${String(summary.blocks)} BLOCK · ${String(summary.warns)} WARN`}
       open={panelOpen}
       onOpenChange={handlePanelOpen}
@@ -283,7 +251,7 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
                     <ul className="dash-audit-rows">
                       {items.map((event) => {
                         const color = riskColor(event.l1_combined_score, event.final_decision);
-                        const active = selectedId === event.event_id;
+                        const active = selectedEvent?.event_id === event.event_id;
                         return (
                           <li key={event.event_id}>
                             <button
@@ -292,8 +260,8 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
                                 active ? 'dash-audit-row--active' : ''
                               }`}
                               onClick={() =>
-                                setSelectedId((prev) =>
-                                  prev === event.event_id ? null : event.event_id,
+                                setSelectedEvent((prev) =>
+                                  prev?.event_id === event.event_id ? null : event,
                                 )
                               }
                             >
@@ -325,7 +293,11 @@ export default function ReportAuditTimeline({ events, loading }: ReportAuditTime
 
           <div className={`dash-audit-pane-wrap ${selected ? 'dash-audit-pane-wrap--visible' : ''}`}>
             {selected ? (
-              <AuditDetailPane event={selected} onClose={() => setSelectedId(null)} />
+              <AuditDetailPane
+                event={selected}
+                onClose={() => setSelectedEvent(null)}
+                onSelectEvent={setSelectedEvent}
+              />
             ) : (
               <div className="dash-audit-pane dash-audit-pane--empty">
                 <p>选择左侧记录查看详情</p>

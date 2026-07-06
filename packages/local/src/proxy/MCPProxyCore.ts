@@ -52,8 +52,12 @@ export class MCPProxyCore {
   >();
   /** `${sessionId}:${toolName}` → 连续授权失败次数 */
   private readonly consecutiveFailures = new Map<string, number>();
+  /** sessionId → 上一笔 tools/call 工具名 — 供云端链路上下文 */
+  private readonly lastToolBySession = new Map<string, string>();
   /** sessionId → 上一笔 tools/call 服务端耗时 (ms) */
   private readonly lastToolDurationMs = new Map<string, number>();
+  /** 当前会话 MCP 客户端 — initialize.clientInfo */
+  private sessionMcpClient: { name: string; version?: string } | null = null;
 
   constructor(
     private readonly config: ProxyConfig,
@@ -81,6 +85,7 @@ export class MCPProxyCore {
 
     try {
       const sessionId = this.generateULID();
+      this.sessionMcpClient = null;
       const childProcess = this.spawnServerProcess();
       this.attachChildExitHandler(childProcess);
 
@@ -243,12 +248,15 @@ export class MCPProxyCore {
         }
       }
 
+      const detectionDurationMs = Math.max(0, Math.round(performance.now() - perfStart));
+
       const result: DetectionResult = {
         decision,
         score,
         triggeredRules: this.mapRuleMatchesToTriggeredRules(ruleMatches),
         statAnomalies: this.mapL1ToStatAnomalies(l1Result),
         ...(decision === 'BLOCK' && blockReason !== undefined ? { blockReason } : {}),
+        detectionDurationMs,
         markers,
       };
 
@@ -381,6 +389,13 @@ export class MCPProxyCore {
 
       const request = parsed;
 
+      if (request.method === 'initialize') {
+        this.captureInitializeClient(request);
+        this.writeLineSafe(session, session.serverIn, trimmed, 'clientInitializeForward');
+        this.logPerformance('clientInitializeForward', perfStart, this.config.performance.maxDetectionLatencyMs);
+        return;
+      }
+
       if (request.method === 'tools/call') {
         await this.processToolCallRequest(session, request, trimmed);
       } else {
@@ -410,19 +425,32 @@ export class MCPProxyCore {
     rawLine: string,
   ): Promise<void> {
     try {
+      const toolName = this.resolveToolNameFromRequest(request);
+      const previousTool = this.lastToolBySession.get(session.sessionId);
       const result = await session.handleToolCall(request);
 
       if (result.decision === 'BLOCK') {
         const blockResponse = this.buildBlockResponse(request, result);
         this.writeJsonRpc(session, session.clientOut, blockResponse);
-        await session.asyncLogger.logBlocked(request, result);
+        await session.asyncLogger.logBlocked(
+          this.attachAgentWatchMeta(request, session, previousTool),
+          result,
+        );
+        if (toolName !== undefined) {
+          this.lastToolBySession.set(session.sessionId, toolName);
+        }
         return;
       }
 
+      const logRequest = this.attachAgentWatchMeta(request, session, previousTool);
       if (result.decision === 'WARN') {
-        await session.asyncLogger.logWarn(request, result);
+        await session.asyncLogger.logWarn(logRequest, result);
       } else {
-        await session.asyncLogger.logAllowed(request, result);
+        await session.asyncLogger.logAllowed(logRequest, result);
+      }
+
+      if (toolName !== undefined) {
+        this.lastToolBySession.set(session.sessionId, toolName);
       }
 
       this.trackPendingToolCall(request, session);
@@ -430,6 +458,15 @@ export class MCPProxyCore {
     } catch (cause) {
       this.handleStreamFault(session, 'processToolCallRequest', cause, request.id);
     }
+  }
+
+  private resolveToolNameFromRequest(request: JSONRPCRequest): string | undefined {
+    const params = request.params;
+    if (params === null || typeof params !== 'object' || Array.isArray(params)) {
+      return undefined;
+    }
+    const name = (params as Record<string, unknown>)['name'];
+    return typeof name === 'string' && name.trim().length > 0 ? name.trim() : undefined;
   }
 
   private async handleServerStdoutLine(session: ProxySession, line: string): Promise<void> {
@@ -638,6 +675,66 @@ export class MCPProxyCore {
     }
 
     return detectionEvent;
+  }
+
+  private captureInitializeClient(request: JSONRPCRequest): void {
+    const params = request.params;
+    if (params === null || typeof params !== 'object' || Array.isArray(params)) {
+      return;
+    }
+
+    const clientInfo = params['clientInfo'];
+    if (clientInfo === null || typeof clientInfo !== 'object' || Array.isArray(clientInfo)) {
+      return;
+    }
+
+    const info = clientInfo as Record<string, unknown>;
+    const name = info['name'];
+    if (typeof name !== 'string' || name.trim().length === 0) {
+      return;
+    }
+
+    this.sessionMcpClient = {
+      name: name.trim(),
+      ...(typeof info['version'] === 'string' && info['version'].trim().length > 0
+        ? { version: info['version'].trim() }
+        : {}),
+    };
+  }
+
+  /** 为日志/上报附加 MCP 客户端与链路上下文 — 不修改转发给 Server 的原始语义 */
+  private attachAgentWatchMeta(
+    request: JSONRPCRequest,
+    session?: ProxySession,
+    previousTool?: string,
+  ): JSONRPCRequest {
+    const params =
+      request.params !== null && typeof request.params === 'object' && !Array.isArray(request.params)
+        ? { ...(request.params as Record<string, unknown>) }
+        : {};
+
+    if (this.sessionMcpClient !== null) {
+      params['_agentwatch_client_name'] = this.sessionMcpClient.name;
+      if (this.sessionMcpClient.version) {
+        params['_agentwatch_client_version'] = this.sessionMcpClient.version;
+      }
+    }
+
+    if (session !== undefined) {
+      params['_agentwatch_chain_depth'] = session.sequenceNo;
+      if (previousTool !== undefined && previousTool.length > 0) {
+        params['_agentwatch_previous_tool'] = previousTool;
+      }
+    }
+
+    if (Object.keys(params).length === 0) {
+      return request;
+    }
+
+    return {
+      ...request,
+      params,
+    };
   }
 
   private extractRpcMeta(params: Record<string, unknown>): Record<string, unknown> {

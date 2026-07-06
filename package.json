@@ -1,6 +1,6 @@
 {
   "name": "@agentwatch-web3/cli",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "AgentWatch CLI — MCP security proxy, HMAC audit chain, L0/L1 risk detection, and tamper-proof log verification",
   "type": "module",
   "main": "./dist/packages/local/src/cli/index.js",

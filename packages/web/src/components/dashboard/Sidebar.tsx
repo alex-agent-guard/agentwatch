@@ -1,23 +1,20 @@
 import { Link, useLocation } from 'react-router-dom';
 import BrandLogo from '@/components/BrandLogo';
-
-const navItems = [
-  { to: '/', label: '首页' },
-  { to: '/dashboard', label: '仪表盘' },
-  { to: '/reports', label: '报告' },
-  { to: '/settings', label: '设置' },
-];
+import { getAppNavItems, isAppNavActive, isPreviewNavigation } from '@/lib/appNavigation';
 
 export default function Sidebar() {
   const location = useLocation();
+  const preview = isPreviewNavigation(location.pathname);
+  const navItems = getAppNavItems(location.pathname);
+  const brandTo = preview ? '/preview/home' : '/home';
 
   return (
     <aside className="dash-sidebar dash-glass relative z-10 hidden w-56 shrink-0 p-4 md:block">
-      <BrandLogo to="/" size="md" className="mb-8 px-2" />
+      <BrandLogo to={brandTo} size="md" className="mb-8 px-2" />
 
       <nav className="space-y-0.5">
         {navItems.map((item) => {
-          const active = location.pathname === item.to;
+          const active = isAppNavActive(location.pathname, item.to);
           return (
             <Link
               key={item.to}

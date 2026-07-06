@@ -111,4 +111,6 @@ export interface DetectionResult {
   statAnomalies: StatAnomaly[];
   markers?: SecurityMarker[];
   blockReason?: string;
+  /** L0+L1 检测链路耗时 (ms) — AL-008 / Dashboard detection_duration_ms */
+  detectionDurationMs?: number;
 }

@@ -41,7 +41,7 @@ export const RULE_USER_COPY: Record<string, RiskCopyEntry> = {
     userTitleZh: '工具链滥用',
     layer: 'L0',
     defaultAction: 'BLOCK',
-    triggerPlainZh: '高危工具连续调用且链深度 ≥ 3',
+    triggerPlainZh: '敏感工具（transfer / write_file 等）且链深度 ≥ 3',
     riskPlainZh: '多步工具链可能是在编排读密钥、外传、转账等组合攻击。',
     userAction: '逐步检查调用链，合法流程可加入可信链白名单。',
   },
@@ -49,16 +49,16 @@ export const RULE_USER_COPY: Record<string, RiskCopyEntry> = {
     userTitleZh: '权限探测',
     layer: 'L0',
     defaultAction: 'WARN',
-    triggerPlainZh: '连续 3 次及以上工具调用失败',
+    triggerPlainZh: '连续 3 次及以上授权失败（metadata.consecutive_failures ≥ 3）',
     riskPlainZh: '可能在系统性探测 Agent 权限边界，为后续攻击做准备。',
     userAction: '观察失败是否呈轮换规律，调试完成后重新评估。',
   },
   SUPPLY_CHAIN_001: {
-    userTitleZh: '供应链风险',
+    userTitleZh: '供应链投毒',
     layer: 'L0',
     defaultAction: 'WARN',
     triggerPlainZh: '工具来源不在可信白名单',
-    riskPlainZh: '未知来源工具可能含恶意逻辑或后门。',
+    riskPlainZh: '未知 MCP 插件或工具可能含恶意逻辑、后门或篡改行为。',
     userAction: '仅允许经审计的工具来源，其余禁止调用。',
   },
   FREQ_001: {
@@ -70,11 +70,11 @@ export const RULE_USER_COPY: Record<string, RiskCopyEntry> = {
     userAction: '暂停 Agent，确认批处理任务后申请频率豁免。',
   },
   PROMPT_INJ_001: {
-    userTitleZh: '分隔符注入',
+    userTitleZh: 'Prompt 注入',
     layer: 'L0',
     defaultAction: 'WARN',
-    triggerPlainZh: '参数含连续分隔符或 HTML/XML 闭合标签',
-    riskPlainZh: '可能试图破坏 prompt 结构，夹带额外指令。',
+    triggerPlainZh: '参数含连续分隔符、HTML/XML 闭合标签或夹带额外指令',
+    riskPlainZh: '可能破坏 prompt 结构，在文档或输入中夹带恶意指令。',
     userAction: '检查分隔符前后是否有可疑指令，正常文档需人工确认。',
   },
   high_value_transfer: {
@@ -136,14 +136,19 @@ const COMBINATION_HINTS: Array<{ id: string; match: (ruleIds: Set<string>) => bo
   },
 ];
 
-export function inferCombinationHints(ruleIds: string[]): RiskCopyEntry[] {
+export interface CombinationHint {
+  id: string;
+  copy: RiskCopyEntry;
+}
+
+export function inferCombinationHints(ruleIds: string[]): CombinationHint[] {
   const set = new Set(ruleIds);
-  const out: RiskCopyEntry[] = [];
+  const out: CombinationHint[] = [];
 
   for (const combo of COMBINATION_HINTS) {
     if (!combo.match(set)) continue;
     const copy = getRiskCopy(combo.id);
-    if (copy) out.push(copy);
+    if (copy) out.push({ id: combo.id, copy });
   }
 
   return out;

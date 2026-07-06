@@ -18,6 +18,16 @@ export const VIDEO_ASSETS = {
   cardEarthNetwork: '/assets/videos/card-earth-network.mov',
   /** 机器人手指接触人类.mov */
   cardRobotTouch: '/assets/videos/card-robot-touch.mov',
+  /** 保护态 Hero — 新用户空数据安全页（待放入素材） */
+  protectionHero: '/assets/videos/protection-hero.mp4',
+} as const;
+
+/** 保护态 Hero 静态图 — 按档位切换 */
+export const PROTECTION_ASSETS = {
+  /** 警告态背景 — 龙虾/异常场景 */
+  warnHero: '/assets/images/protection-warn-hero.png',
+  /** 拦截态背景 — 黑客/入侵场景 */
+  blockHero: '/assets/images/protection-block-hero.png',
 } as const;
 
 export type VideoAssetKey = keyof typeof VIDEO_ASSETS;

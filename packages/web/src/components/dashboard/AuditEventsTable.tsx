@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
 import FilterPillBar from '@/components/dashboard/FilterPillBar';
-import { RiskExplanation } from '@/components/dashboard/RiskExplanation';
+import AuditEventDetail from '@/components/dashboard/AuditEventDetail';
 import type { AgentWatchEvent, FinalDecision } from '@/types/events';
 import {
   actionDisplay,
@@ -15,6 +15,7 @@ interface AuditEventsTableProps {
   loading?: boolean;
   filter?: FinalDecision | 'ALL';
   onFilterChange?: (filter: FinalDecision | 'ALL') => void;
+  emptyHint?: string;
 }
 
 const PAGE_SIZE = 8;
@@ -31,11 +32,12 @@ export default function AuditEventsTable({
   loading,
   filter: controlledFilter,
   onFilterChange,
+  emptyHint = '暂无事件 — 运行 proxy 测试后刷新',
 }: AuditEventsTableProps) {
   const [search, setSearch] = useState('');
   const [internalFilter, setInternalFilter] = useState<FinalDecision | 'ALL'>('ALL');
   const [page, setPage] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<AgentWatchEvent | null>(null);
 
   const filter = controlledFilter ?? internalFilter;
   const setFilter = onFilterChange ?? setInternalFilter;
@@ -59,14 +61,14 @@ export default function AuditEventsTable({
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const selectedRow = filtered.find((e) => e.event_id === selectedId) ?? null;
+  const selectedRow = selectedEvent;
 
   return (
     <div className="dash-glass dash-panel dash-panel--elevated p-4 md:p-5 dash-enter" style={{ '--dash-delay': '220ms' } as CSSProperties}>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="dash-panel__head mb-0">
           <h3 className="dash-panel__title">审计事件</h3>
-          <p className="dash-panel__desc">点击行展开 HMAC 与规则</p>
+          <p className="dash-panel__desc">点击行查看引擎命中与上报字段</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="dash-input-wrap">
@@ -112,7 +114,7 @@ export default function AuditEventsTable({
             {!loading && pageRows.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center text-text-muted">
-                  暂无事件 — 运行 proxy 测试后刷新
+                  {emptyHint}
                 </td>
               </tr>
             )}
@@ -120,11 +122,11 @@ export default function AuditEventsTable({
               pageRows.map((row) => {
                 const score = row.l1_combined_score;
                 const color = riskColor(score, row.final_decision);
-                const isSelected = selectedId === row.event_id;
+                const isSelected = selectedEvent?.event_id === row.event_id;
                 return (
                   <tr
                     key={row.event_id}
-                    onClick={() => setSelectedId(isSelected ? null : row.event_id)}
+                    onClick={() => setSelectedEvent(isSelected ? null : row)}
                     className={`dash-table-row ${isSelected ? 'dash-table-row--open' : ''}`}
                     data-decision={row.final_decision}
                   >
@@ -162,20 +164,17 @@ export default function AuditEventsTable({
       >
         {selectedRow && (
           <div className="dash-detail__inner">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-text-muted">HMAC 摘要</p>
-                <p className="mt-1 break-all font-mono text-[11px] text-text-data">{selectedRow.hmac}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedId(null)}
-                className="dash-text-btn"
-              >
-                关闭
-              </button>
-            </div>
-            <RiskExplanation event={selectedRow} />
+            <AuditEventDetail
+              key={selectedRow.event_id}
+              event={selectedRow}
+              onClose={() => setSelectedEvent(null)}
+              onSelectEvent={(next) => {
+                setSelectedEvent(next);
+                const idx = filtered.findIndex((e) => e.event_id === next.event_id);
+                if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
+              }}
+              compact
+            />
           </div>
         )}
       </div>

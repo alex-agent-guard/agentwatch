@@ -1,20 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
 
-const tabs = [
-  { to: '/', label: '首页' },
-  { to: '/dashboard', label: '仪表盘' },
-  { to: '/reports', label: '报告' },
-  { to: '/settings', label: '设置' },
-];
+import { getAppNavItems, isAppNavActive } from '@/lib/appNavigation';
 
 export default function MobileTabBar() {
   const location = useLocation();
+  const tabs = getAppNavItems(location.pathname);
 
   return (
-    <nav className="dash-mobile-nav fixed bottom-0 left-0 right-0 z-50 md:hidden" aria-label="主导航">
+    <nav
+      className="dash-mobile-nav fixed bottom-0 left-0 right-0 z-[60] md:hidden"
+      aria-label="主导航"
+    >
       <div className="dash-mobile-nav__inner">
         {tabs.map((tab) => {
-          const active = location.pathname === tab.to;
+          const active = isAppNavActive(location.pathname, tab.to);
           return (
             <Link
               key={tab.to}

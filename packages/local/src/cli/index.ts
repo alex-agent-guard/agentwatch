@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import { proxyCommand } from './commands/proxy.js';
 import { initCommand } from './commands/init.js';
+import { credentialsCommand } from './commands/credentials.js';
 import { statusCommand } from './commands/status.js';
 import { logsCommand } from './commands/logs.js';
 import { auditVerifyCommand } from './commands/audit.js';
@@ -23,6 +24,11 @@ program
   .command('init')
   .description('初始化 AgentWatch 配置')
   .action(initCommand);
+
+program
+  .command('credentials')
+  .description('显示 Agent ID 与上传密钥（供 Dashboard 复制绑定）')
+  .action(credentialsCommand);
 
 program
   .command('status')
@@ -72,6 +78,7 @@ function tryImplicitProxyLaunch(): boolean {
   const knownCommands = new Set([
     'proxy',
     'init',
+    'credentials',
     'status',
     'logs',
     'audit',

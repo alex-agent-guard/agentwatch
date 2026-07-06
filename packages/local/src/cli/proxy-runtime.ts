@@ -30,6 +30,7 @@ import { BaselineDeviationDetector } from '../detection/scenarios/BaselineDeviat
 import { BaselineStorage } from '../baseline/BaselineStorage.js';
 import { BaselineService } from '../baseline/BaselineService.js';
 import { EventUploader } from '../cloud/EventUploader.js';
+import { resolveMcpServiceName } from '../cloud/mcpServiceName.js';
 import { AsyncLogger } from '../logging/AsyncLogger.js';
 import { MCPProxyCore } from '../proxy/MCPProxyCore.js';
 import { V0_BUILTIN_RULES } from '../rule/builtin.js';
@@ -649,11 +650,12 @@ async function assembleGateway(): Promise<GatewayRuntime> {
   });
 
   const cloudConfig = configManager.getCloudConfig();
+  const mcpServiceName = resolveMcpServiceName(proxyConfig.server);
   const logger = new AsyncLogger(
     proxyConfig.agentWatch.logging,
     false,
     MAX_PERSISTED_MEMORY_BYTES,
-    { config: cloudConfig },
+    { config: cloudConfig, mcpServiceName },
   );
   BaselineStorage.setLogger(logger);
   loggerRef.current = logger;

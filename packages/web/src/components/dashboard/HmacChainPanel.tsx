@@ -28,7 +28,7 @@ export default function HmacChainPanel({ events }: HmacChainPanelProps) {
               : 'bg-accent-red/15 text-accent-red'
           }`}
         >
-          {chainValid ? '✓ Chain Intact (local preview)' : '✗ Broken'}
+          {chainValid ? '✓ 链完整' : '✗ 链异常'}
         </span>
       </div>
 

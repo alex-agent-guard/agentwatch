@@ -75,14 +75,17 @@
 
 ---
 
-## Phase D — 前端 Live（仅 Dashboard 数据源）
+## Phase D — 前端 Live（GitHub / Wallet 登录）
+
+> 逐步操作：[`docs/LOGIN_SETUP.md`](./LOGIN_SETUP.md)
 
 | ID | 任务 | 状态 |
 |----|------|------|
-| D-1 | Settings 填 agentId | ⬜ |
-| D-2 | `packages/web/.env.local` → `VITE_USE_MOCK=false` | ⬜ |
+| D-0 | `packages/web/.env.local` → `VITE_USE_MOCK=false` | ⬜ |
+| D-1 | GitHub 或 Wallet 登录成功 | ⬜ |
+| D-2 | Settings 填 agentId + upload_secret | ⬜ |
 | D-3 | Dashboard 展示 Supabase 行 | ⬜ |
-| D-4 | 错误 install_id 读不到数据 | ⬜ |
+| D-4 | 未登录访问 Dashboard → 跳转 /auth | ⬜ |
 | D-5 | Home.tsx **不修改** | ✅ |
 
 **Phase D 验收核对**

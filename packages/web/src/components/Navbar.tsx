@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import BrandLogo from '@/components/BrandLogo';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 
 const links = [
   { to: '/', label: '首页' },
@@ -26,6 +27,11 @@ export default function Navbar() {
                   className={`type-nav text-sm transition ${
                     active ? 'text-white' : 'text-white/50 hover:text-white/80'
                   }`}
+                  onClick={() => {
+                    if (link.to === '/dashboard' || link.to === '/reports') {
+                      storeAuthRedirect(link.to);
+                    }
+                  }}
                 >
                   {link.label}
                 </Link>

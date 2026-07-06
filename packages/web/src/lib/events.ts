@@ -64,6 +64,42 @@ export async function fetchEvents(
   return { data: rows, error: null };
 }
 
+export interface FetchSessionEventsOptions {
+  installId: string;
+  sessionId: string;
+  limit?: number;
+}
+
+/** 同 session 内事件 — 按时间升序，用于工具链还原 */
+export async function fetchSessionEvents(
+  options: FetchSessionEventsOptions,
+): Promise<{ data: AgentWatchEvent[]; error: string | null }> {
+  const { installId, sessionId, limit = 30 } = options;
+
+  if (shouldUseDemoData()) {
+    const rows = MOCK_EVENTS.filter(
+      (e) =>
+        e.session_id === sessionId &&
+        (e.install_id === installId || installId === 'demo-install'),
+    ).sort((a, b) => a.timestamp_ms - b.timestamp_ms);
+    return { data: rows.slice(0, limit), error: null };
+  }
+
+  const { data, error } = await getAuthenticatedClient()
+    .from('events')
+    .select('*')
+    .eq('install_id', installId)
+    .eq('session_id', sessionId)
+    .order('timestamp_ms', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    return { data: [], error: error.message };
+  }
+
+  return { data: (data ?? []) as AgentWatchEvent[], error: null };
+}
+
 export async function testConnection(installId: string): Promise<boolean> {
   if (shouldUseDemoData()) return true;
 

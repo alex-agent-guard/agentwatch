@@ -341,6 +341,30 @@ describe('cloudEventMapper', () => {
     expect(payload.hmac).toHaveLength(64);
     expect(payload.detection.finalDecision).toBe('BLOCK');
     expect(payload.toolCall.argKeyHashes.length).toBeGreaterThan(0);
+    expect(payload.toolCall.serviceName).toBe('tools/call');
+  });
+
+  it('uses mcpServiceName from mapper context', () => {
+    const payload = toCloudEventPayload(sampleEntry(), {
+      mcpServiceName: '@okx_ai/okx-trade-mcp',
+    });
+    expect(payload.toolCall.serviceName).toBe('@okx_ai/okx-trade-mcp');
+  });
+
+  it('maps _agentwatch_client_name from behavior log params', () => {
+    const payload = toCloudEventPayload(
+      sampleEntry({
+        params: {
+          amount: 1,
+          _agentwatch_client_name: 'claude-code',
+          _agentwatch_client_version: '1.0.0',
+        },
+      }),
+      { mcpServiceName: '@okx_ai/okx-trade-mcp' },
+    );
+    expect(payload.context.clientName).toBe('claude-code');
+    expect(payload.context.clientVersion).toBe('1.0.0');
+    expect(payload.toolCall.argCount).toBe(1);
   });
 });
 

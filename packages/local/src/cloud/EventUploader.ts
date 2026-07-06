@@ -39,6 +39,8 @@ export interface EventUploaderConfig {
   flushIntervalMs?: number;
   /** 单批最大条数 — 默认 100 */
   batchSize?: number;
+  /** 被代理 MCP 服务标识 — 写入每条上报事件的 service_name */
+  mcpServiceName?: string;
 }
 
 /** 测试/集成注入选项 */
@@ -95,6 +97,7 @@ export class EventUploader {
   private readonly enabled: boolean;
   private readonly flushIntervalMs: number;
   private readonly batchSize: number;
+  private readonly mcpServiceName?: string;
   private timer: ReturnType<typeof setInterval> | null = null;
   private flushing = false;
 
@@ -105,6 +108,9 @@ export class EventUploader {
     this.enabled = config.enabled ?? true;
     this.flushIntervalMs = config.flushIntervalMs ?? DEFAULT_FLUSH_INTERVAL_MS;
     this.batchSize = config.batchSize ?? DEFAULT_BATCH_SIZE;
+    if (config.mcpServiceName !== undefined) {
+      this.mcpServiceName = config.mcpServiceName;
+    }
 
     const queueLogger = {
       logAlert: (alert: AlertRecord) => this.logger.logAlert(alert),
@@ -196,7 +202,11 @@ export class EventUploader {
         this.logInfo(`skip event without hmac eventId=${entry.eventId}`);
         return;
       }
-      this.queue.push(toCloudEventPayload(entry));
+      this.queue.push(
+        toCloudEventPayload(entry, {
+          ...(this.mcpServiceName ? { mcpServiceName: this.mcpServiceName } : {}),
+        }),
+      );
     } catch (cause) {
       this.logError('事件入队失败', cause);
     }

@@ -25,5 +25,6 @@ export function sampleCloudEvent(overrides?: Partial<CloudEventPayload>): CloudE
     },
     context: overrides?.context ?? { chainDepth: 1 },
     hmac: overrides?.hmac ?? 'a'.repeat(64),
+    ...(overrides?.prevHmac !== undefined ? { prevHmac: overrides.prevHmac } : {}),
   };
 }

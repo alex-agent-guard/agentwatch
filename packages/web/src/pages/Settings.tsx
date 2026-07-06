@@ -1,33 +1,86 @@
 import type { CSSProperties, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import AgentOnboarding from '@/components/AgentOnboarding';
 import DashPageHeader from '@/components/dashboard/DashPageHeader';
 import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
 import MobileTabBar from '@/components/dashboard/MobileTabBar';
 import Sidebar from '@/components/dashboard/Sidebar';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
-import { formatAccountLabel, getCurrentUser, signOut } from '@/lib/auth';
+import {
+  consumeAgentBindPrefill,
+  parseBindPrefillFromSearch,
+} from '@/lib/agentBindPrefill';
+import { formatAccountLabel, getAuthProvider, getCurrentUser, signOut } from '@/lib/auth';
+import { fetchLiveEntitlementStatus, type LiveEntitlementStatus } from '@/lib/liveEntitlement';
+import { isLiveGateEnabled } from '@/lib/liveGate';
 import { clearGuestMode, isGuestMode, isLiveDataMode, shouldUseDemoData } from '@/lib/session';
 import { bindInstallId, registerUploadSecret, removeUserAgent } from '@/lib/userAgents';
 import { setActiveInstallId } from '@/types/events';
 
 export default function Settings() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { agents, activeInstallId, loading, error, refreshAgents, selectInstallId } =
     useActiveInstall();
 
+  const previewOnboarding =
+    import.meta.env.DEV && searchParams.get('preview') === 'onboarding';
+
   const [accountLabel, setAccountLabel] = useState<string | null>(null);
-  const guest = isGuestMode();
+  const [providerLabel, setProviderLabel] = useState<string | null>(null);
+  const guest = isGuestMode() && shouldUseDemoData();
   const [agentId, setAgentId] = useState('');
   const [uploadSecret, setUploadSecret] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [installPrefillNote, setInstallPrefillNote] = useState<string | null>(null);
+  const [liveStatus, setLiveStatus] = useState<LiveEntitlementStatus | null>(null);
+
+  const liveGate = isLiveGateEnabled();
+  const isOnboarding =
+    previewOnboarding || (isLiveDataMode() && !loading && agents.length === 0);
+
+  useEffect(() => {
+    if (!liveGate || guest) {
+      return;
+    }
+    void fetchLiveEntitlementStatus().then(setLiveStatus);
+  }, [liveGate, guest]);
+
+  useEffect(() => {
+    const fromUrl = parseBindPrefillFromSearch(`?${searchParams.toString()}`);
+    const fromStore = fromUrl === null ? consumeAgentBindPrefill() : null;
+    const prefill = fromUrl ?? fromStore;
+    if (prefill === null) {
+      return;
+    }
+    if (prefill.agentId) {
+      setAgentId(prefill.agentId);
+    }
+    if (prefill.uploadSecret) {
+      setUploadSecret(prefill.uploadSecret);
+    }
+    if (prefill.agentId || prefill.uploadSecret) {
+      setInstallPrefillNote('已从安装脚本填入凭证，确认后点击「接入 Agent」');
+    }
+    if (searchParams.toString()) {
+      navigate('/settings', { replace: true });
+    }
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     if (guest) {
-      setAccountLabel('游客');
+      setAccountLabel('Dev Mock');
+      setProviderLabel(null);
       return;
     }
-    void getCurrentUser().then((user) => setAccountLabel(formatAccountLabel(user)));
+    void getCurrentUser().then((user) => {
+      setAccountLabel(formatAccountLabel(user));
+      const provider = getAuthProvider(user);
+      setProviderLabel(provider === 'github' ? 'GitHub' : provider === 'wallet' ? 'Wallet' : null);
+    });
   }, [guest]);
 
   const flash = (msg: string) => {
@@ -37,6 +90,9 @@ export default function Settings() {
 
   const handleAddAgent = async (e: FormEvent) => {
     e.preventDefault();
+    if (previewOnboarding) {
+      return;
+    }
     const trimmedId = agentId.trim();
     if (!trimmedId) {
       setFieldError('请填写 Agent ID');
@@ -49,6 +105,7 @@ export default function Settings() {
     setFieldError(null);
     setBusy(true);
 
+    const wasOnboarding = isOnboarding;
     const bindRes = await bindInstallId(trimmedId, '我的 Agent');
     if (bindRes.error || !bindRes.data) {
       setBusy(false);
@@ -71,6 +128,11 @@ export default function Settings() {
     await refreshAgents();
     selectInstallId(bindRes.data.install_id);
     setBusy(false);
+
+    if (wasOnboarding) {
+      navigate('/home', { replace: true });
+      return;
+    }
     flash('Agent 已接入');
   };
 
@@ -95,6 +157,46 @@ export default function Settings() {
     await signOut();
     window.location.hash = '#/auth';
   };
+
+  if (loading && isLiveDataMode() && !previewOnboarding) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#131a26] text-sm text-white/60">
+        正在加载…
+      </div>
+    );
+  }
+
+  if (isOnboarding) {
+    return (
+      <>
+        {previewOnboarding && (
+          <p className="agent-onboard-preview-badge" role="status">
+            产品体验 — 登录后新用户会自动看到此页
+          </p>
+        )}
+        <AgentOnboarding
+        accountLabel={accountLabel}
+        providerLabel={providerLabel}
+        agentId={agentId}
+        uploadSecret={uploadSecret}
+        fieldError={fieldError}
+        busy={busy}
+        prefillNotice={installPrefillNote}
+        showUploadSecret={!shouldUseDemoData()}
+        onAgentIdChange={(value) => {
+          setAgentId(value);
+          if (fieldError) setFieldError(null);
+        }}
+        onUploadSecretChange={(value) => {
+          setUploadSecret(value);
+          if (fieldError) setFieldError(null);
+        }}
+        onSubmit={(e) => void handleAddAgent(e)}
+        onSignOut={() => void handleSignOut()}
+        />
+      </>
+    );
+  }
 
   const dataModeLabel = shouldUseDemoData() ? '演示' : '实时';
 
@@ -128,6 +230,9 @@ export default function Settings() {
               <h2 className="dash-settings-row__title">账户</h2>
             </div>
             <div className="dash-settings-row__control">
+              {providerLabel && (
+                <span className="dash-settings-chip dash-settings-chip--muted">{providerLabel}</span>
+              )}
               <span className="dash-settings-chip">{accountLabel ?? '—'}</span>
               <span
                 className={`dash-settings-pill ${shouldUseDemoData() ? 'dash-settings-pill--demo' : 'dash-settings-pill--live'}`}
@@ -135,6 +240,9 @@ export default function Settings() {
                 {isLiveDataMode() && <span className="dash-settings-pill__dot" aria-hidden />}
                 {dataModeLabel}
               </span>
+              {liveGate && liveStatus?.entitled && (
+                <span className="dash-settings-chip dash-settings-chip--live">已激活</span>
+              )}
               <button type="button" onClick={() => void handleSignOut()} className="dash-ghost-btn">
                 {guest ? '退出' : '退出登录'}
               </button>
@@ -156,7 +264,9 @@ export default function Settings() {
             <div className="dash-settings-row__meta">
               <h2 className="dash-settings-row__title">我的 Agent</h2>
               <p className="dash-settings-row__desc">
-                终端运行 <span className="dash-settings__mono">agentwatch init</span>，粘贴 ID 与密钥即可接入。
+                在本机命令行运行{' '}
+                <span className="dash-settings__mono">agentwatch-web3 credentials</span>
+                ，粘贴 ID 与密钥即可接入。
               </p>
             </div>
           </div>

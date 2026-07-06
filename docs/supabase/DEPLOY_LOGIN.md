@@ -1,6 +1,7 @@
 # Login v1 部署清单
 
-参考规格：`docs/login_system_target.md`
+> **完整落地手册**：[`docs/LOGIN_SETUP.md`](../LOGIN_SETUP.md)  
+> 参考规格：`docs/login_system_target.md`
 
 ## 1. 执行 SQL（Supabase Dashboard → SQL Editor）
 

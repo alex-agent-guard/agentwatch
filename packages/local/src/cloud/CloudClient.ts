@@ -49,12 +49,22 @@ export interface CloudEventPayload {
   };
   /** L0/L1 检测结果摘要 */
   detection: {
-    /** L0 命中规则列表 */
-    l0TriggeredRules: Array<{ ruleId: string; severity: string }>;
+    /** L0 命中规则列表 — matchedFields 为引擎命中字段快照 */
+    l0TriggeredRules: Array<{
+      ruleId: string;
+      severity: string;
+      matchedFields?: Record<string, unknown>;
+    }>;
     /** L1 融合综合分 */
     l1CombinedScore: number;
+    /** L1 分项得分 */
+    l1Scores?: Record<string, number>;
     /** 最终决策 — 仅 BLOCK/WARN 应进入上报队列 */
     finalDecision: 'ALLOW' | 'BLOCK' | 'WARN';
+    /** 阻断原因 — 来自 DetectionResult.blockReason */
+    blockReason?: string;
+    /** L0+L1 检测链路耗时 (ms) */
+    detectionDurationMs?: number;
   };
   /** 工具链上下文 */
   context: {
@@ -62,9 +72,25 @@ export interface CloudEventPayload {
     chainDepth: number;
     /** 上一工具名 — 可选 */
     previousTool?: string;
+    /** MCP initialize.clientInfo.name — Proxy 采集 */
+    clientName?: string;
+    /** MCP initialize.clientInfo.version */
+    clientVersion?: string;
+    /** 工具调用 trace ID */
+    tid?: string;
+    /** 会话内序号 */
+    sequenceNo?: number;
+    /** L0 metadata.consecutive_failures 快照 */
+    consecutiveFailures?: number;
+    /** L0 metadata.frequency_1m 快照 */
+    frequency1m?: number;
+    /** MCP server namespace / 工具来源 */
+    toolSource?: string;
   };
   /** HMAC 链式签名 — 来自 BehaviorLogEntry._meta.hmac */
   hmac: string;
+  /** 前一条日志 HMAC — 链式校验 */
+  prevHmac?: string;
 }
 
 /** 云端 batch 接口成功响应体 */

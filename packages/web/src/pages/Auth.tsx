@@ -1,10 +1,21 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import AuthVideoBackdrop from '@/components/AuthVideoBackdrop';
+import { AUTH_ERROR_STORAGE_KEY } from '@/components/AuthSessionBootstrap';
 import BrandLogo, { BRAND_NAME_EN } from '@/components/BrandLogo';
-import { signInWithGitHub, signInWithWallet } from '@/lib/auth';
+import {
+  bootstrapAuthSession,
+  clearAuthCallbackFromUrl,
+  readAuthCallbackError,
+  resetAuthFlow,
+  signInWithGitHub,
+  signInWithWallet,
+} from '@/lib/auth';
+import { storeAuthRedirect, peekAuthRedirect } from '@/lib/authRedirect';
 import { enterGuestMode } from '@/lib/session';
+import { resolvePostLoginRoute } from '@/lib/postAuthRoute';
+import { USE_MOCK } from '@/lib/supabase';
 
 type AuthBusy = 'github' | 'wallet' | null;
 
@@ -72,15 +83,54 @@ function AuthGateButton({
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [busy, setBusy] = useState<AuthBusy>(null);
   const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(!USE_MOCK);
+
+  useEffect(() => {
+    if (USE_MOCK) {
+      return;
+    }
+
+    const from = (location.state as { from?: string } | null)?.from;
+    if (from) {
+      storeAuthRedirect(from);
+    }
+
+    void (async () => {
+      try {
+        const storedError = sessionStorage.getItem(AUTH_ERROR_STORAGE_KEY);
+        if (storedError) {
+          sessionStorage.removeItem(AUTH_ERROR_STORAGE_KEY);
+          setError(storedError);
+        }
+
+        const callbackError = readAuthCallbackError();
+        if (callbackError) {
+          clearAuthCallbackFromUrl();
+          await resetAuthFlow();
+          setError(callbackError);
+          return;
+        }
+
+        const session = await bootstrapAuthSession();
+        if (session) {
+          const route = await resolvePostLoginRoute();
+          navigate(route, { replace: true });
+        }
+      } finally {
+        setChecking(false);
+      }
+    })();
+  }, [navigate, location.state]);
 
   const handleGitHub = async () => {
     setBusy('github');
     setError(null);
     const result = await signInWithGitHub();
-    setBusy(null);
     if (result.error) {
+      setBusy(null);
       setError(result.error);
     }
   };
@@ -94,80 +144,109 @@ export default function Auth() {
       setError(result.error);
       return;
     }
-    navigate('/dashboard');
+    const route = await resolvePostLoginRoute();
+    navigate(route);
   };
 
   return (
     <div className="relative min-h-screen">
       <AuthVideoBackdrop />
 
+      <Link to="/" className="auth-stage__back">
+        ← back
+      </Link>
+
       <div className="auth-shell relative z-10 min-h-screen">
-        <main className="auth-stage">
-          <motion.div
-            className="auth-stage__rail"
-            initial={{ scaleY: 0, opacity: 0 }}
-            animate={{ scaleY: 1, opacity: 1 }}
-            transition={{ duration: 1, ease, delay: 0.1 }}
-            aria-hidden
-          />
+        {checking ? (
+          <main className="auth-stage flex items-center justify-center">
+            <p className="text-sm text-white/50">正在检查登录状态…</p>
+          </main>
+        ) : (
+          <main className="auth-stage">
+            <motion.div
+              className="auth-stage__rail"
+              initial={{ scaleY: 0, opacity: 0 }}
+              animate={{ scaleY: 1, opacity: 1 }}
+              transition={{ duration: 1, ease, delay: 0.1 }}
+              aria-hidden
+            />
 
-          <motion.header
-            className="auth-stage__brand"
-            initial={{ opacity: 0, x: -28, y: 12 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            transition={{ duration: 0.75, ease, delay: 0.05 }}
-          >
-            <div className="auth-stage__mark">
-              <BrandLogo to="/" size="lg" showText={false} className="auth-stage__logo" />
-              <span className="auth-stage__company">{BRAND_NAME_EN}</span>
-            </div>
-            <h1 className="auth-stage__title">Agent Watch</h1>
-            <p className="auth-stage__tag">MCP Runtime Gate</p>
-          </motion.header>
-
-          <motion.div
-            className="auth-stage__panel"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease, delay: 0.18 }}
-          >
-            <div className="auth-stage__choices">
-              <AuthGateButton
-                icon={<GitHubIcon />}
-                label="GitHub"
-                ariaLabel="Sign in with GitHub"
-                busy={busy === 'github'}
-                disabled={busy !== null}
-                onClick={() => void handleGitHub()}
-                delay={0.24}
-              />
-              <AuthGateButton
-                icon={<WalletIcon />}
-                label="Wallet"
-                ariaLabel="Sign in with wallet"
-                busy={busy === 'wallet'}
-                disabled={busy !== null}
-                onClick={() => void handleWallet()}
-                delay={0.32}
-              />
-            </div>
-
-            {error && <p className="auth-stage__error">{error}</p>}
-
-            <motion.button
-              type="button"
-              className="auth-stage__demo"
-              onClick={() => {
-                enterGuestMode();
-                navigate('/dashboard');
-              }}
-              whileHover={{ opacity: 1 }}
-              whileTap={{ scale: 0.98 }}
+            <motion.header
+              className="auth-stage__brand"
+              initial={{ opacity: 0, x: -28, y: 12 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ duration: 0.75, ease, delay: 0.05 }}
             >
-              Demo →
-            </motion.button>
-          </motion.div>
-        </main>
+              <div className="auth-stage__mark">
+                <BrandLogo to="/" size="lg" showText={false} className="auth-stage__logo" />
+                <span className="auth-stage__company">{BRAND_NAME_EN}</span>
+              </div>
+              <h1 className="auth-stage__title">Agent Watch</h1>
+              <p className="auth-stage__tag">MCP Runtime Gate</p>
+            </motion.header>
+
+            <motion.div
+              className="auth-stage__panel"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease, delay: 0.18 }}
+            >
+              <div className="auth-stage__choices">
+                <AuthGateButton
+                  icon={<GitHubIcon />}
+                  label="GitHub"
+                  ariaLabel="Sign in with GitHub"
+                  busy={busy === 'github'}
+                  disabled={busy !== null}
+                  onClick={() => {
+                    if (!peekAuthRedirect()) {
+                      storeAuthRedirect('/home');
+                    }
+                    void handleGitHub();
+                  }}
+                  delay={0.24}
+                />
+                <AuthGateButton
+                  icon={<WalletIcon />}
+                  label="Wallet"
+                  ariaLabel="Sign in with wallet"
+                  busy={busy === 'wallet'}
+                  disabled={busy !== null}
+                  onClick={() => {
+                    if (!peekAuthRedirect()) {
+                      storeAuthRedirect('/home');
+                    }
+                    void handleWallet();
+                  }}
+                  delay={0.32}
+                />
+              </div>
+
+              {error && <p className="auth-stage__error">{error}</p>}
+
+              {USE_MOCK && (
+                <motion.button
+                  type="button"
+                  className="auth-stage__demo"
+                  onClick={() => {
+                    enterGuestMode();
+                    navigate('/home');
+                  }}
+                  whileHover={{ opacity: 1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Dev Mock →
+                </motion.button>
+              )}
+
+              <div className="auth-stage__previews">
+                <Link to="/preview/home" className="auth-stage__demo-link">
+                  Demo →
+                </Link>
+              </div>
+            </motion.div>
+          </main>
+        )}
       </div>
     </div>
   );

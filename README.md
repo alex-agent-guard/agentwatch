@@ -1,7 +1,7 @@
 # AgentWatch — MCP Web3 安全审计
 
 > **Monorepo**：本地 CLI 中间件 + Web Dashboard  
-> **npm 包**：[@agentwatch-web3/cli](https://www.npmjs.com/package/@agentwatch-web3/cli) **v0.1.2** · Node.js ≥ 18  
+> **npm 包**：[@agentwatch-web3/cli](https://www.npmjs.com/package/@agentwatch-web3/cli) **v0.2.0** · Node.js ≥ 18  
 > **CLI 命令**：`agentwatch-web3`（主）/ `agentwatch`（兼容别名）
 
 AgentWatch 部署在 AI Agent 与 MCP Server 之间，拦截每一次 `tools/call`，在本地完成 **L0 规则 + L1 统计** 检测，输出 ALLOW / WARN / BLOCK，写入 HMAC 防篡改审计日志；BLOCK/WARN 可脱敏上报 Supabase，Dashboard 实时展示。
@@ -19,7 +19,7 @@ AgentWatch 部署在 AI Agent 与 MCP Server 之间，拦截每一次 `tools/cal
   <img src="docs/screenshots/preview-dashboard.png" alt="Dashboard 风险拦截详情" width="320" />
 </p>
 
-Web 端支持 **GitHub 登录**、**Wallet（SIWE）** 与 **Demo 游客模式**（无需账号即可浏览 Dashboard 示例数据）。
+Web 端支持 **GitHub 登录**、**Wallet（SIWE）**；Live 模式见 [`docs/LOGIN_SETUP.md`](docs/LOGIN_SETUP.md)。
 
 > 背景视频等大体积静态资源默认不入库，本地开发见 [`packages/web/public/assets/videos/README.md`](packages/web/public/assets/videos/README.md)。
 
@@ -43,7 +43,7 @@ Web 端支持 **GitHub 登录**、**Wallet（SIWE）** 与 **Demo 游客模式**
 ### 1. 安装 CLI（日常使用）
 
 ```bash
-npm install -g @agentwatch-web3/cli@0.1.2
+npm install -g @agentwatch-web3/cli@0.2.0
 agentwatch-web3 init
 
 # 被代理 MCP 的凭证写入 config.yaml server.env 或 export 对应变量
@@ -117,7 +117,7 @@ echo $?   # 0=通过, 1=篡改/错误, 2=参数错误
 
 | 模块 | 路径 | 说明 |
 |------|------|------|
-| 登录 | `/auth` | GitHub OAuth · Wallet（SIWE）· Demo 游客 |
+| 登录 | `/auth` | GitHub OAuth · Wallet（SIWE）；Live 需 Session |
 | Dashboard | `/dashboard` | `VITE_USE_MOCK=false` 且已登录时读 Supabase `events` |
 | Settings | `/settings` | 绑定 `install_id`（= CLI `agentId`）与上报密钥 |
 
@@ -231,7 +231,7 @@ npm run bench   # 详见 packages/local/tests/bench/results.md
 | `handleToolCall failed` | 用最新 `npm run build`；DecisionRouter 预算已对齐 10ms |
 | Dashboard 无新数据 | 确认 `AGENTWATCH_UPLOAD_SECRET`；Settings `install_id` = `agentId` |
 | Cloud 上报失败 | 勿用旧全局 npm 包；跑 `bash scripts/phase-d-proxy.sh` |
-| `command not found: agentwatch-web3` | `npm install -g @agentwatch-web3/cli@0.1.2` |
+| `command not found: agentwatch-web3` | `npm install -g @agentwatch-web3/cli@0.2.0` |
 | FIFO 不存在 | 先启动 `phase-d-proxy.sh` |
 | GitHub / Wallet 登录失败 | 检查 Supabase Auth Provider 与 `.env.local`（见 DEPLOY_LOGIN.md） |
 
@@ -253,6 +253,7 @@ npm link               # 本地全局链接 CLI
 
 | 文档 | 说明 |
 |------|------|
+| [**登录落地手册**](docs/LOGIN_SETUP.md) | GitHub + Wallet 逐步配置与验收 |
 | [产品架构完整版](docs/产品架构完整版.md) | 长期设计 SSOT（V0→V2） |
 | [MVP 任务清单](docs/agentwatch_v0_mvp_tasklist.md) | 63 项任务与接口契约 |
 | [架构复查报告](docs/architecture_review_report.md) | V0 as-built 对照 |
@@ -286,7 +287,8 @@ agentwatch-web3 audit verify --json && echo $?
 |------|------|
 | 0.1.0 | 首包 |
 | 0.1.1 | 双 bin `agentwatch-web3` / `agentwatch` |
-| **0.1.2** | 修复 commander 生产依赖；Supabase 上报适配；**当前稳定版** |
+| **0.1.2** | 修复 commander 生产依赖；Supabase 上报适配 |
+| **0.2.0** | Live 登录（GitHub/Wallet）、激活码门禁、审计详情增强、码池管理工具；**当前稳定版** |
 
 Dashboard 源码在 `packages/web`，需单独 `npm run dev` / 部署；CLI 已通过 npm 发布。
 

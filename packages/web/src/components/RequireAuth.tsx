@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-import { getSession, onAuthStateChange } from '@/lib/auth';
-import { isGuestMode } from '@/lib/session';
+import { bootstrapAuthSession, onAuthStateChange } from '@/lib/auth';
+import { persistBindPrefillFromSearch } from '@/lib/agentBindPrefill';
+import { storeAuthRedirect } from '@/lib/authRedirect';
 import { USE_MOCK } from '@/lib/supabase';
 
 interface RequireAuthProps {
@@ -11,8 +12,8 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children }: RequireAuthProps) {
   const location = useLocation();
-  const [ready, setReady] = useState(USE_MOCK || isGuestMode());
-  const [allowed, setAllowed] = useState(USE_MOCK || isGuestMode());
+  const [ready, setReady] = useState(USE_MOCK);
+  const [allowed, setAllowed] = useState(USE_MOCK);
 
   useEffect(() => {
     if (USE_MOCK) {
@@ -21,21 +22,13 @@ export default function RequireAuth({ children }: RequireAuthProps) {
       return;
     }
 
-    const syncGuest = () => {
-      if (isGuestMode()) {
-        setAllowed(true);
-        setReady(true);
-      }
-    };
-
-    syncGuest();
-
     let cancelled = false;
-    void getSession().then((session) => {
+
+    void bootstrapAuthSession().then((session) => {
       if (cancelled) {
         return;
       }
-      setAllowed(isGuestMode() || session !== null);
+      setAllowed(session !== null);
       setReady(true);
     });
 
@@ -43,7 +36,7 @@ export default function RequireAuth({ children }: RequireAuthProps) {
       if (cancelled) {
         return;
       }
-      setAllowed(isGuestMode() || session !== null);
+      setAllowed(session !== null);
       setReady(true);
     });
 
@@ -51,7 +44,7 @@ export default function RequireAuth({ children }: RequireAuthProps) {
       cancelled = true;
       unsubscribe();
     };
-  }, [location.pathname]);
+  }, []);
 
   if (!ready) {
     return (
@@ -62,7 +55,9 @@ export default function RequireAuth({ children }: RequireAuthProps) {
   }
 
   if (!allowed) {
-    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+    storeAuthRedirect(location.pathname);
+    persistBindPrefillFromSearch(location.search);
+    return <Navigate to="/auth" replace />;
   }
 
   return children;

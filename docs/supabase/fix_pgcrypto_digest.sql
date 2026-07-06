@@ -97,7 +97,7 @@ begin
   loop
     insert into public.events (
       install_id, session_id, agent_id, user_id, event_id,
-      tool_name, service_name, timestamp_ms, duration_ms,
+      tool_name, service_name, client_name, timestamp_ms, duration_ms,
       arg_count, arg_key_hashes, arg_value_types,
       has_address, has_amount, amount_bucket,
       l0_triggered_rules, l1_combined_score, final_decision,
@@ -111,6 +111,7 @@ begin
       v_row->>'event_id',
       v_row->>'tool_name',
       coalesce(v_row->>'service_name', 'tools/call'),
+      nullif(v_row->>'client_name', ''),
       (v_row->>'timestamp_ms')::bigint,
       coalesce((v_row->>'duration_ms')::int, 0),
       coalesce((v_row->>'arg_count')::int, 0),
