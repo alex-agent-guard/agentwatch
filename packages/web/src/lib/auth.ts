@@ -15,6 +15,7 @@ import {
   requestAccounts,
   resolveEvmWallet,
 } from '@/lib/evmWallet';
+import { exchangeWeb3Token } from '@/lib/web3AuthExchange';
 
 const WEB3_STATEMENT = 'Sign in to AgentWatch Dashboard';
 
@@ -132,6 +133,21 @@ export async function signInWithGitHub(): Promise<{ error: string | null }> {
   return { error: null };
 }
 
+function mapWalletAuthError(msg: string, chainId?: number): string {
+  if (/Invalid value|fetch/i.test(msg)) {
+    return '钱包扩展干扰了网络请求。请换 Chrome + OKX Wallet 重试；仍失败可改用 MetaMask 或在 OKX App 内置浏览器打开。';
+  }
+  if (/web3_provider_disabled|Web3 provider is disabled/i.test(msg)) {
+    return 'Supabase 未启用 Web3 Wallet。请打开 Supabase → Authentication → Providers → Web3 → 启用 Ethereum，保存后重试。';
+  }
+  if (/invalid|signature|siwe|chain|validation/i.test(msg)) {
+    return chainId !== undefined
+      ? `Wallet 验签失败：${msg}（当前 Chain ID: ${chainId}）`
+      : `Wallet 验签失败：${msg}`;
+  }
+  return msg;
+}
+
 export async function signInWithWallet(): Promise<{ error: string | null }> {
   clearGuestMode();
 
@@ -140,50 +156,36 @@ export async function signInWithWallet(): Promise<{ error: string | null }> {
     return { error: '未检测到 EVM 钱包。请安装 OKX Wallet 或 MetaMask 浏览器扩展，并用 Chrome 打开本站。' };
   }
 
-  const origin = window.location.origin.replace(/\/$/, '');
-
   try {
     const address = await requestAccounts(wallet);
     const chainId = await readChainId(wallet);
+    const pageUrl = new URL(window.location.href);
     const message = buildSiweMessage({
-      domain: window.location.host,
+      domain: pageUrl.host,
       address,
       statement: WEB3_STATEMENT,
-      uri: `${origin}/`,
+      uri: pageUrl.href,
       chainId,
     });
     const signature = await personalSign(wallet, message, address);
 
-    const { error } = await supabase.auth.signInWithWeb3({
-      chain: 'ethereum',
-      message,
-      signature: signature as `0x${string}`,
-    });
+    const tokenResult = await exchangeWeb3Token({ message, signature });
+    if ('error' in tokenResult) {
+      return { error: mapWalletAuthError(tokenResult.error, chainId) };
+    }
 
+    const { error } = await supabase.auth.setSession({
+      access_token: tokenResult.accessToken,
+      refresh_token: tokenResult.refreshToken,
+    });
     if (error) {
-      const msg = error.message ?? 'Wallet 登录失败';
-      if (/web3_provider_disabled|Web3 provider is disabled/i.test(msg)) {
-        return {
-          error:
-            'Supabase 未启用 Web3 Wallet。请打开 Supabase → Authentication → Providers → Web3 → 启用 Ethereum，保存后重试。',
-        };
-      }
-      if (/invalid|signature|siwe|chain/i.test(msg)) {
-        return { error: `Wallet 验签失败：${msg}（当前 Chain ID: ${chainId}）` };
-      }
-      return { error: msg };
+      return { error: mapWalletAuthError(error.message ?? 'Session 写入失败', chainId) };
     }
 
     return { error: null };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (/Invalid value|fetch/i.test(msg)) {
-      return {
-        error:
-          '钱包扩展请求失败。请换 Chrome + OKX Wallet 扩展重试；若仍失败，改用 MetaMask 或在 OKX App 内置浏览器打开。',
-      };
-    }
-    return { error: msg };
+    return { error: mapWalletAuthError(msg) };
   }
 }
 

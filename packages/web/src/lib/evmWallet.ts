@@ -101,17 +101,44 @@ function utf8ToHex(value: string): string {
   return `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
+function readSignatureValue(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (value && typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    for (const key of ['signature', 'sig', 'result', 'data'] as const) {
+      if (typeof record[key] === 'string') {
+        return record[key] as string;
+      }
+    }
+  }
+  throw new Error('钱包返回的签名格式无效，请重试或换 MetaMask');
+}
+
+/** 统一为 Supabase 要求的 0x + hex 签名 */
+export function normalizeSignature(value: unknown): `0x${string}` {
+  const raw = readSignatureValue(value).trim();
+  const hex = raw.startsWith('0x') ? raw.slice(2) : raw;
+  if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length < 128) {
+    throw new Error('钱包签名长度异常，请重试');
+  }
+  return `0x${hex}` as `0x${string}`;
+}
+
 /** OKX 用明文 message；MetaMask 有时需要 hex — 两种都试 */
-export async function personalSign(wallet: EvmWalletProvider, message: string, address: string): Promise<string> {
+export async function personalSign(wallet: EvmWalletProvider, message: string, address: string): Promise<`0x${string}`> {
   try {
-    return (await wallet.request({
+    const sig = await wallet.request({
       method: 'personal_sign',
       params: [message, address],
-    })) as string;
+    });
+    return normalizeSignature(sig);
   } catch {
-    return (await wallet.request({
+    const sig = await wallet.request({
       method: 'personal_sign',
       params: [utf8ToHex(message), address],
-    })) as string;
+    });
+    return normalizeSignature(sig);
   }
 }
