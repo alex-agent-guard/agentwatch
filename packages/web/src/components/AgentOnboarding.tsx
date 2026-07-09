@@ -68,100 +68,6 @@ function CmdRow({ cmd }: { cmd: string }) {
   );
 }
 
-function StepIcon({ children }: { children: ReactNode }) {
-  return <span className="agent-onboard__step-icon">{children}</span>;
-}
-
-function FlowStep({
-  icon,
-  title,
-  children,
-  last = false,
-}: {
-  icon: ReactNode;
-  title: string;
-  children?: ReactNode;
-  last?: boolean;
-}) {
-  return (
-    <li className={`agent-onboard__timeline-step${last ? ' agent-onboard__timeline-step--last' : ''}`}>
-      <div className="agent-onboard__timeline-rail" aria-hidden>
-        <StepIcon>{icon}</StepIcon>
-        {!last && <span className="agent-onboard__timeline-line" />}
-      </div>
-      <div className="agent-onboard__timeline-content">
-        <p className="agent-onboard__timeline-title">{title}</p>
-        {children}
-      </div>
-    </li>
-  );
-}
-
-function IconNode() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 2L4 6.5v11L12 22l8-4.5v-11L12 2z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconTerminal() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M7 9l3 3-3 3M12 15h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconDownload() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 3v10m0 0 4-4m-4 4-4-4M5 19h14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconKey() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M11 11l9 9m-3-3 3 3m-3-3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconClipboard() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="8" y="4" width="10" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M6 8H5a2 2 0 0 0-2 2v10h10v-1" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function IconDashboard() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="13" y="10" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
 export default function AgentOnboarding({
   accountLabel,
   providerLabel,
@@ -177,6 +83,10 @@ export default function AgentOnboarding({
   onSubmit,
   onSignOut,
 }: AgentOnboardingProps) {
+  const credentialsReady =
+    agentId.trim().length > 0 && (!showUploadSecret || uploadSecret.trim().length > 0);
+  const hasPrefill = Boolean(prefillNotice) || credentialsReady;
+
   const handleSubmit = (e: FormEvent) => {
     if (demoPreview) {
       e.preventDefault();
@@ -284,108 +194,136 @@ export default function AgentOnboarding({
         >
           <p className="agent-onboard__eyebrow">Setup</p>
           <h1 className="agent-onboard__title">添加你的 Agent</h1>
-          <p className="agent-onboard__lead">本机运行一条命令 → 自动安装 CLI 并获得 Agent ID</p>
+          <p className="agent-onboard__lead">
+            共 3 步：<strong>本机终端装 CLI</strong> → <strong>网页确认凭证</strong> → <strong>接入完成</strong>
+          </p>
 
-          <div className="agent-onboard__hero-cmd">
-            <CmdRow cmd={INSTALL_ONE_LINER} />
-            <p className="agent-onboard__hero-hint">
-              脚本会复制凭证并打开本页；若未自动填入，运行下方 credentials 命令
-            </p>
-          </div>
+          <ol className="agent-onboard__guide">
+            <li
+              className={`agent-onboard__guide-step${hasPrefill ? ' agent-onboard__guide-step--done' : ' agent-onboard__guide-step--active'}`}
+            >
+              <div className="agent-onboard__guide-head">
+                <span className="agent-onboard__guide-num" aria-hidden>
+                  {hasPrefill ? '✓' : '1'}
+                </span>
+                <div>
+                  <p className="agent-onboard__guide-title">在本 Mac 打开终端，运行安装命令</p>
+                  <p className="agent-onboard__guide-desc">
+                    会自动安装 CLI、生成本机 Agent ID，并尝试打开本页填入凭证。
+                    <strong> 这一步在终端完成，不是在浏览器里点。</strong>
+                  </p>
+                </div>
+              </div>
+              <CmdRow cmd={INSTALL_ONE_LINER} />
+              <p className="agent-onboard__guide-tip">
+                打开终端：Mac 按 <kbd>⌘</kbd> <kbd>空格</kbd>，输入「终端」回车。需要 Node.js 18+，没有请先装{' '}
+                <ExtLink href={LINKS.node}>nodejs.org</ExtLink>
+              </p>
+            </li>
 
-          <form className="agent-onboard__form" onSubmit={handleSubmit} noValidate>
-            <label className="agent-onboard__field">
-              <span className="agent-onboard__label">Agent ID</span>
-              <input
-                value={agentId}
-                onChange={(e) => onAgentIdChange(e.target.value)}
-                className={`agent-onboard__input${fieldError && !agentId.trim() ? ' agent-onboard__input--invalid' : ''}`}
-                placeholder="agent_xxxxxxxxxxxx"
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </label>
+            <li
+              className={`agent-onboard__guide-step${
+                credentialsReady
+                  ? ' agent-onboard__guide-step--done'
+                  : hasPrefill
+                    ? ' agent-onboard__guide-step--active'
+                    : ''
+              }`}
+            >
+              <div className="agent-onboard__guide-head">
+                <span className="agent-onboard__guide-num" aria-hidden>
+                  {credentialsReady ? '✓' : '2'}
+                </span>
+                <div>
+                  <p className="agent-onboard__guide-title">回到本页，确认 Agent ID 与上传密钥</p>
+                  <p className="agent-onboard__guide-desc">
+                    脚本成功后会自动填入；若仍是空的，在终端运行{' '}
+                    <code className="agent-onboard__inline-code">{CREDENTIALS_CMD}</code> 再粘贴。
+                  </p>
+                </div>
+              </div>
 
-            {showUploadSecret && (
-              <label className="agent-onboard__field">
-                <span className="agent-onboard__label">上传密钥</span>
-                <input
-                  value={uploadSecret}
-                  onChange={(e) => onUploadSecretChange(e.target.value)}
-                  className={`agent-onboard__input${fieldError && !uploadSecret.trim() ? ' agent-onboard__input--invalid' : ''}`}
-                  placeholder="aw_xxxxxxxxxxxxxxxx"
-                  spellCheck={false}
-                  autoComplete="off"
-                />
-              </label>
-            )}
+              <form className="agent-onboard__form agent-onboard__form--guide" onSubmit={handleSubmit} noValidate>
+                <label className="agent-onboard__field">
+                  <span className="agent-onboard__label">Agent ID</span>
+                  <input
+                    value={agentId}
+                    onChange={(e) => onAgentIdChange(e.target.value)}
+                    className={`agent-onboard__input${fieldError && !agentId.trim() ? ' agent-onboard__input--invalid' : ''}`}
+                    placeholder="agent_xxxxxxxxxxxx"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </label>
 
-            {fieldError && <p className="agent-onboard__error">{fieldError}</p>}
+                {showUploadSecret && (
+                  <label className="agent-onboard__field">
+                    <span className="agent-onboard__label">上传密钥</span>
+                    <input
+                      value={uploadSecret}
+                      onChange={(e) => onUploadSecretChange(e.target.value)}
+                      className={`agent-onboard__input${fieldError && !uploadSecret.trim() ? ' agent-onboard__input--invalid' : ''}`}
+                      placeholder="aw_xxxxxxxxxxxxxxxx"
+                      spellCheck={false}
+                      autoComplete="off"
+                    />
+                  </label>
+                )}
 
-            {prefillNotice && !fieldError && (
-              <p className="agent-onboard__prefill-notice">{prefillNotice}</p>
-            )}
+                {!credentialsReady && (
+                  <div className="agent-onboard__guide-fallback">
+                    <p className="agent-onboard__guide-fallback-label">字段还是空的？在终端运行：</p>
+                    <CmdRow cmd={CREDENTIALS_CMD} />
+                  </div>
+                )}
 
-            <button type="submit" className="agent-onboard__submit" disabled={busy}>
-              {busy ? '接入中…' : '接入 Agent'}
-            </button>
-          </form>
+                {fieldError && <p className="agent-onboard__error">{fieldError}</p>}
+
+                {prefillNotice && !fieldError && (
+                  <p className="agent-onboard__prefill-notice">{prefillNotice}</p>
+                )}
+
+                <div className="agent-onboard__guide-step3">
+                  <div className="agent-onboard__guide-head agent-onboard__guide-head--inline">
+                    <span className="agent-onboard__guide-num" aria-hidden>
+                      3
+                    </span>
+                    <p className="agent-onboard__guide-title">点击接入，绑定到当前登录账户</p>
+                  </div>
+                  <button type="submit" className="agent-onboard__submit" disabled={busy}>
+                    {busy ? '接入中…' : '接入 Agent → 进入首页'}
+                  </button>
+                  <p className="agent-onboard__guide-tip agent-onboard__guide-tip--submit">
+                    接入成功后会把本机 Agent 绑到你刚登录的账户，并跳转到监控首页。
+                  </p>
+                </div>
+              </form>
+            </li>
+          </ol>
 
           <div className="agent-onboard__folds">
             <details className="agent-onboard__fold">
-              <summary>完整流程</summary>
-              <div className="agent-onboard__fold-body">
-                <ol className="agent-onboard__timeline">
-                  <FlowStep icon={<IconDownload />} title="一键安装（推荐）">
-                    <CmdRow cmd={INSTALL_ONE_LINER} />
-                    <p className="agent-onboard__timeline-sub">
-                      自动安装 npm 包、生成 Agent ID，并打开 Dashboard 绑定页
-                    </p>
-                  </FlowStep>
-                  <FlowStep icon={<IconNode />} title="或：安装 Node.js 18+">
-                    <ExtLink href={LINKS.node}>nodejs.org</ExtLink>
-                  </FlowStep>
-                  <FlowStep icon={<IconTerminal />} title="打开命令行">
-                    <p className="agent-onboard__timeline-sub">
-                      Mac <kbd>⌘</kbd> <kbd>空格</kbd> 终端 · Win <kbd>Win</kbd> PowerShell
-                    </p>
-                  </FlowStep>
-                  <FlowStep icon={<IconDownload />} title="手动安装 CLI（可选）">
-                    <CmdRow cmd="npm install -g @agentwatch-web3/cli" />
-                  </FlowStep>
-                  <FlowStep icon={<IconKey />} title="初始化（可选）">
-                    <CmdRow cmd="agentwatch-web3 init" />
-                  </FlowStep>
-                  <FlowStep icon={<IconClipboard />} title="复制凭证（若脚本未自动填入）">
-                    <CmdRow cmd={CREDENTIALS_CMD} />
-                  </FlowStep>
-                  <FlowStep icon={<IconDashboard />} title="粘贴并接入 → 首页" last />
-                </ol>
-              </div>
-            </details>
-
-            <details className="agent-onboard__fold">
-              <summary>已装过？</summary>
-              <div className="agent-onboard__fold-body">
-                <p className="agent-onboard__timeline-sub">运行 credentials 复制凭证，或重新执行一键安装脚本。</p>
-                <CmdRow cmd={CREDENTIALS_CMD} />
-              </div>
-            </details>
-
-            <details className="agent-onboard__fold">
-              <summary>Agent ID 是什么</summary>
-              <div className="agent-onboard__fold-body">
-                <p className="agent-onboard__timeline-sub">本机安装编号，不是 GitHub 登录账号。</p>
-              </div>
-            </details>
-
-            <details className="agent-onboard__fold">
-              <summary>报错？</summary>
+              <summary>已装过 CLI？ / 脚本报错？</summary>
               <div className="agent-onboard__fold-body">
                 <p className="agent-onboard__timeline-sub">
-                  找不到命令 → <ExtLink href={LINKS.node}>装 Node.js</ExtLink>
-                  <br />
-                  无配置 → 先 <code>init</code>
+                  <strong>已经装过：</strong>终端运行 <code>agentwatch-web3 credentials</code>，复制输出粘贴到上方表单。
+                </p>
+                <CmdRow cmd={CREDENTIALS_CMD} />
+                <p className="agent-onboard__timeline-sub">
+                  <strong>找不到命令：</strong>先装 <ExtLink href={LINKS.node}>Node.js 18+</ExtLink>，或手动执行{' '}
+                  <code>npm install -g @agentwatch-web3/cli</code> 后再 <code>agentwatch-web3 init</code>。
+                </p>
+                <CmdRow cmd="npm install -g @agentwatch-web3/cli" />
+                <CmdRow cmd="agentwatch-web3 init" />
+              </div>
+            </details>
+
+            <details className="agent-onboard__fold">
+              <summary>Agent ID 是什么？和 GitHub 账号一样吗？</summary>
+              <div className="agent-onboard__fold-body">
+                <p className="agent-onboard__timeline-sub">
+                  Agent ID 是<strong>你这台 Mac 上 CLI 生成的本机编号</strong>，用来把本机上报的数据绑到当前网页账户。
+                  它不是 GitHub / 钱包登录名，每个设备可以有不同的 Agent ID。
                 </p>
               </div>
             </details>

@@ -5785,8 +5785,136 @@ code,
 }
 
 .agent-onboard__lead strong {
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 600;
+}
+
+.agent-onboard__guide {
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.agent-onboard__guide-step {
+  padding: 1rem 1rem 1.05rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.agent-onboard__guide-step--active {
+  border-color: rgba(143, 212, 168, 0.35);
+  box-shadow: 0 0 0 1px rgba(143, 212, 168, 0.08);
+}
+
+.agent-onboard__guide-step--done {
+  border-color: rgba(143, 212, 168, 0.22);
+}
+
+.agent-onboard__guide-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.85rem;
+}
+
+.agent-onboard__guide-head--inline {
+  margin-bottom: 0.65rem;
+}
+
+.agent-onboard__guide-num {
+  flex-shrink: 0;
+  width: 1.65rem;
+  height: 1.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.agent-onboard__guide-step--done .agent-onboard__guide-num,
+.agent-onboard__guide-step--active .agent-onboard__guide-num {
+  color: rgba(18, 28, 22, 0.95);
+  background: rgba(143, 212, 168, 0.92);
+  border-color: transparent;
+}
+
+.agent-onboard__guide-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.agent-onboard__guide-desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.agent-onboard__guide-desc strong {
+  color: rgba(255, 210, 160, 0.95);
+  font-weight: 600;
+}
+
+.agent-onboard__guide-tip {
+  margin: 0.65rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.agent-onboard__guide-tip kbd {
+  display: inline-block;
+  margin: 0 0.1rem;
+  padding: 0.08rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.6875rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.agent-onboard__inline-code {
+  font-size: 0.8125em;
+  color: rgba(175, 232, 196, 0.95);
+}
+
+.agent-onboard__form--guide {
+  margin-top: 0.15rem;
+}
+
+.agent-onboard__guide-fallback {
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.agent-onboard__guide-fallback-label {
+  margin: 0 0 0.45rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.agent-onboard__guide-step3 {
+  margin-top: 1rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.agent-onboard__guide-tip--submit {
+  margin-top: 0.55rem;
 }
 
 /* legacy step styles — kept for preview badge compat */
