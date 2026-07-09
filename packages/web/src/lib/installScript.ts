@@ -1,14 +1,11 @@
-/** 一键安装脚本 — 展示用 one-liner（与 scripts/install-agentwatch.sh 对齐） */
+/** 终端命令 — 与 packages/local CLI 对齐 */
 
-const DEFAULT_INSTALL_SCRIPT_URL =
-  import.meta.env.VITE_INSTALL_SCRIPT_URL ??
-  'https://raw.githubusercontent.com/agentwatch/agent-watch-v0/main/scripts/install-agentwatch.sh';
+/** 首次：安装 CLI + 初始化 + 打印本机 Agent ID */
+export const SETUP_AND_SHOW_ID_CMD =
+  'npm install -g @agentwatch-web3/cli && agentwatch-web3 init && agentwatch-web3 credentials';
 
-/** 仓库本地开发（从 monorepo 根目录执行） */
-export const INSTALL_LOCAL_CMD = 'bash scripts/install-agentwatch.sh';
+/** 已装过 CLI：只打印 Agent ID + 上传密钥 */
+export const SHOW_AGENT_ID_CMD = 'agentwatch-web3 credentials';
 
-/** 用户复制到终端的一条命令 — dev 默认本地脚本，生产为 curl */
-export const INSTALL_ONE_LINER =
-  import.meta.env.DEV
-    ? INSTALL_LOCAL_CMD
-    : `curl -fsSL ${DEFAULT_INSTALL_SCRIPT_URL} | bash`;
+/** @deprecated 旧 curl 安装易 404/卡住，保留仅供文档引用 */
+export const INSTALL_ONE_LINER = SETUP_AND_SHOW_ID_CMD;

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 
 import { readAgentWatchConfigSummary } from '../lib/config-reader.js';
@@ -26,12 +27,8 @@ export function credentialsCommand(): void {
 
   if (!existsSync(configPath)) {
     console.info('');
-    console.info(chalk.yellow('还没有 AgentWatch 配置。请先运行：'));
-    console.info('');
-    console.info(chalk.cyan('  npm install -g @agentwatch-web3/cli'));
-    console.info(chalk.cyan('  agentwatch-web3 init'));
-    console.info('');
-    console.info(`配置将保存在：${configPath}`);
+    console.info(chalk.yellow('还没有配置。终端运行：'));
+    console.info(chalk.cyan('  npm install -g @agentwatch-web3/cli && agentwatch-web3 init'));
     console.info('');
     return;
   }
@@ -40,23 +37,25 @@ export function credentialsCommand(): void {
   const uploadSecret = readUploadSecretFromConfig(configPath);
 
   console.info('');
-  console.info(chalk.bold('复制下面内容到 Dashboard「添加你的 Agent」页面'));
-  console.info('');
-  console.info(chalk.dim('─'.repeat(44)));
-  console.info('');
-  console.info(`${chalk.bold('Agent ID')}${chalk.dim('（粘贴到第一个框）')}`);
+  console.info(chalk.bold('Agent ID'));
   console.info(chalk.green(`  ${summary.agentId}`));
-  console.info('');
   if (uploadSecret) {
-    console.info(`${chalk.bold('上传密钥')}${chalk.dim('（粘贴到第二个框）')}`);
+    console.info('');
+    console.info(chalk.bold('上传密钥'));
     console.info(chalk.green(`  ${uploadSecret}`));
-    console.info('');
-  } else {
-    console.info(chalk.yellow('  未找到 uploadSecret — 请重新运行 agentwatch-web3 init'));
-    console.info('');
   }
-  console.info(chalk.dim('─'.repeat(44)));
   console.info('');
-  console.info(chalk.dim(`配置文件：${configPath}`));
+
+  const clip = uploadSecret
+    ? `${summary.agentId}\n${uploadSecret}`
+    : summary.agentId;
+  try {
+    if (process.platform === 'darwin') {
+      execSync('pbcopy', { input: clip });
+      console.info(chalk.dim('已复制到剪贴板，粘贴到网页即可'));
+    }
+  } catch {
+    /* ignore */
+  }
   console.info('');
 }

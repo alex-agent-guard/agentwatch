@@ -61,7 +61,7 @@ export default function Settings() {
       setUploadSecret(prefill.uploadSecret);
     }
     if (prefill.agentId || prefill.uploadSecret) {
-      setInstallPrefillNote('第 2 步已完成：凭证已自动填入，请直接点「接入 Agent → 进入首页」');
+      setInstallPrefillNote('已填入，点「接入」即可');
     }
     if (searchParams.toString()) {
       navigate('/settings', { replace: true });
