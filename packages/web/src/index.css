@@ -5990,6 +5990,32 @@ code,
   margin-top: 0.15rem;
 }
 
+.agent-onboard__paste-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.agent-onboard__paste-btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(143, 212, 168, 0.35);
+  background: rgba(143, 212, 168, 0.1);
+  color: rgba(175, 232, 196, 0.95);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.agent-onboard__paste-btn:hover {
+  background: rgba(143, 212, 168, 0.18);
+}
+
+.agent-onboard__paste-hint {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .agent-onboard__mini-step .agent-onboard__cmd {
   margin-top: 0;
 }

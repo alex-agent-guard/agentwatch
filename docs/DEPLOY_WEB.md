@@ -1,5 +1,6 @@
 # Web Dashboard 商用部署（Vercel + 自有域名）
 
+> **OKX 渠道一键手册**：见 [`docs/OKX_DEPLOY_RUNBOOK.md`](./OKX_DEPLOY_RUNBOOK.md)（含域名推荐 + 脚本索引）  
 > **正式商用方案**：Vercel 托管静态 Dashboard + Supabase 后端 + **自有域名**  
 > GitHub Pages 仅作备用（见文末），**不要**作为对外主站。
 
@@ -164,7 +165,7 @@ bash scripts/verify-login-setup.sh   # 本地 Supabase / OAuth 配置
 
 ```bash
 export AGENTWATCH_DASHBOARD_URL=https://app.你的域名.com
-curl -fsSL https://raw.githubusercontent.com/alex-agent-guard/agentwatch/main/scripts/install-agentwatch.sh | bash
+curl -fsSL https://www.deeptrench.space/install.sh | bash
 ```
 
 ---

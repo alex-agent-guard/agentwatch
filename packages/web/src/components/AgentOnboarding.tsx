@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import BrandLogo from '@/components/BrandLogo';
 import DashboardBackdrop from '@/components/dashboard/DashboardBackdrop';
 import { storeAuthRedirect } from '@/lib/authRedirect';
+import { parseCredentialsFromTerminal } from '@/lib/parseCredentials';
 import { SETUP_AND_SHOW_ID_CMD, SHOW_AGENT_ID_CMD } from '@/lib/installScript';
 
 interface AgentOnboardingProps {
@@ -62,6 +63,42 @@ function MiniStep({ n, title, children }: { n: string; title: string; children?:
         {children}
       </div>
     </li>
+  );
+}
+
+function PasteCredentialsButton({
+  onPaste,
+}: {
+  onPaste: (agentId: string, uploadSecret: string) => void;
+}) {
+  const [hint, setHint] = useState<string | null>(null);
+
+  return (
+    <div className="agent-onboard__paste-row">
+      <button
+        type="button"
+        className="agent-onboard__paste-btn"
+        onClick={() => {
+          void navigator.clipboard.readText().then((text) => {
+            const parsed = parseCredentialsFromTerminal(text);
+            if (!parsed) {
+              setHint('剪贴板里没有 Agent ID，请先运行上方命令');
+              window.setTimeout(() => setHint(null), 3000);
+              return;
+            }
+            onPaste(parsed.agentId, parsed.uploadSecret);
+            setHint('已填入');
+            window.setTimeout(() => setHint(null), 2000);
+          }).catch(() => {
+            setHint('无法读取剪贴板，请手动粘贴');
+            window.setTimeout(() => setHint(null), 3000);
+          });
+        }}
+      >
+        从剪贴板填入
+      </button>
+      {hint && <span className="agent-onboard__paste-hint">{hint}</span>}
+    </div>
   );
 }
 
@@ -141,8 +178,17 @@ export default function AgentOnboarding({
               </p>
             </MiniStep>
 
-            <MiniStep n="3" title="把终端里的 Agent ID 贴到下面，点接入">
+            <MiniStep n="3" title="粘贴 Agent ID，点接入">
               <form className="agent-onboard__form agent-onboard__form--compact" onSubmit={handleSubmit} noValidate>
+                <PasteCredentialsButton
+                  onPaste={(id, secret) => {
+                    onAgentIdChange(id);
+                    if (secret) {
+                      onUploadSecretChange(secret);
+                    }
+                  }}
+                />
+
                 <label className="agent-onboard__field">
                   <span className="agent-onboard__label">Agent ID</span>
                   <input
