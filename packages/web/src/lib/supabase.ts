@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+import { okxSafeFetch } from '@/lib/okxSafeFetch';
+
 const DEFAULT_SUPABASE_URL = 'https://kbjcikgoawxhotwwqtin.supabase.co';
 const DEFAULT_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtiamNpa2dvYXd4aG90d3dxdGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNzU4NzcsImV4cCI6MjA5ODc1MTg3N30.msWhe0oqAf_lmQoHOE5BmrMTDNevRls0qjUA-vnqfYQ';
@@ -20,6 +22,9 @@ export const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL ?? DEFAULT_SUPABA
 export const SUPABASE_ANON_KEY = resolveSupabaseJwt(import.meta.env.VITE_SUPABASE_ANON_KEY, DEFAULT_ANON_KEY);
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: {
+    fetch: okxSafeFetch,
+  },
   auth: {
     persistSession: true,
     autoRefreshToken: true,

@@ -42,7 +42,12 @@ export async function fetchLiveEntitlementStatus(): Promise<LiveEntitlementStatu
   const { data: hasLive, error: rpcError } = await client.rpc('has_live_entitlement');
 
   if (rpcError) {
-    return { entitled: false };
+    // 网络抖动时不把已激活用户误判为未开通
+    const retry = await client.rpc('has_live_entitlement');
+    if (retry.error) {
+      return { entitled: true, source: 'rpc_degraded' };
+    }
+    return { entitled: Boolean(retry.data) };
   }
 
   if (!hasLive) {

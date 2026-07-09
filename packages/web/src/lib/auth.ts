@@ -1,11 +1,12 @@
 import type { Session, User } from '@supabase/supabase-js';
 
-import { clearGuestMode } from '@/lib/session';
+import { clearInstallBindSessionFlags } from '@/lib/authCleanup';
 import {
   getOAuthRedirectUrl,
   inAppBrowserHint,
   isRestrictedInAppBrowser,
 } from '@/lib/oauthRedirect';
+import { clearGuestMode } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 
 import {
@@ -66,8 +67,15 @@ export function readAuthCallbackError(): string | null {
 /** 退出并重置 OAuth 状态，便于「重新登录」 */
 export async function resetAuthFlow(): Promise<void> {
   clearGuestMode();
+  clearInstallBindSessionFlags();
   clearAuthCallbackFromUrl();
   await supabase.auth.signOut({ scope: 'local' });
+}
+
+export async function signOut(): Promise<void> {
+  clearGuestMode();
+  clearInstallBindSessionFlags();
+  await supabase.auth.signOut({ scope: 'global' });
 }
 
 function truncateAddress(address: string): string {
@@ -187,11 +195,6 @@ export async function signInWithWallet(): Promise<{ error: string | null }> {
     const msg = err instanceof Error ? err.message : String(err);
     return { error: mapWalletAuthError(msg) };
   }
-}
-
-export async function signOut(): Promise<void> {
-  clearGuestMode();
-  await supabase.auth.signOut();
 }
 
 export async function getSession(): Promise<Session | null> {

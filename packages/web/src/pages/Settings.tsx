@@ -199,11 +199,11 @@ export default function Settings() {
   const handleSignOut = async () => {
     if (guest) {
       clearGuestMode();
-      window.location.hash = '#/auth';
+      window.location.assign(`${window.location.origin}/#/auth`);
       return;
     }
     await signOut();
-    window.location.hash = '#/auth';
+    window.location.assign(`${window.location.origin}/#/auth`);
   };
 
   if ((loading || autoBinding) && isLiveDataMode() && !previewOnboarding && agents.length === 0) {
