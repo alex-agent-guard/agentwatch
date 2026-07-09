@@ -9,18 +9,23 @@ type Web3TokenResponse = {
   code?: number;
 };
 
-/** OKX 等扩展会劫持 window.fetch，XHR 绕过以避免 Invalid value */
-function postJsonWithXhr(url: string, headers: Record<string, string>, body: unknown): Promise<Web3TokenResponse> {
+/**
+ * OKX Wallet 会篡改带 JWT 的 Authorization / apikey 请求头。
+ * 只传 Content-Type，anon key 走 URL query（Supabase 官方支持）。
+ */
+function postJsonWithXhr(url: string, body: unknown): Promise<Web3TokenResponse> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
-    for (const [key, value] of Object.entries(headers)) {
-      xhr.setRequestHeader(key, value);
+    try {
+      xhr.setRequestHeader('Content-Type', 'application/json');
+    } catch (err) {
+      reject(err instanceof Error ? err : new Error(String(err)));
+      return;
     }
     xhr.onload = () => {
       try {
-        const parsed = JSON.parse(xhr.responseText) as Web3TokenResponse;
-        resolve(parsed);
+        resolve(JSON.parse(xhr.responseText) as Web3TokenResponse);
       } catch {
         reject(new Error(`Supabase 响应解析失败 (HTTP ${xhr.status})`));
       }
@@ -41,21 +46,23 @@ function mapWeb3AuthError(payload: Web3TokenResponse, fallbackStatus?: number): 
   return msg;
 }
 
+function mapTransportError(msg: string): string {
+  if (/setRequestHeader|Invalid value|fetch/i.test(msg)) {
+    return '钱包扩展干扰了登录请求。请换 Chrome + OKX Wallet 重试；仍失败可改用 MetaMask 或在 OKX App 内置浏览器打开。';
+  }
+  return msg;
+}
+
 /** 直接调用 Supabase /auth/v1/token?grant_type=web3，不经过 supabase-js fetch */
 export async function exchangeWeb3Token(input: {
   message: string;
   signature: `0x${string}`;
 }): Promise<{ accessToken: string; refreshToken: string } | { error: string }> {
-  const endpoint = `${SUPABASE_URL.replace(/\/$/, '')}/auth/v1/token?grant_type=web3`;
-  const headers = {
-    'Content-Type': 'application/json',
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    'X-Client-Info': 'agentwatch-web3',
-  };
+  const endpoint =
+    `${SUPABASE_URL}/auth/v1/token?grant_type=web3&apikey=${encodeURIComponent(SUPABASE_ANON_KEY)}`;
 
   try {
-    const payload = await postJsonWithXhr(endpoint, headers, {
+    const payload = await postJsonWithXhr(endpoint, {
       chain: 'ethereum',
       message: input.message,
       signature: input.signature,
@@ -71,12 +78,6 @@ export async function exchangeWeb3Token(input: {
     return { error: mapWeb3AuthError(payload) };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (/Invalid value|fetch/i.test(msg)) {
-      return {
-        error:
-          '钱包扩展干扰了网络请求。请换 Chrome + OKX Wallet 重试；仍失败可改用 MetaMask 或在 OKX App 内置浏览器打开。',
-      };
-    }
-    return { error: msg };
+    return { error: mapTransportError(msg) };
   }
 }
