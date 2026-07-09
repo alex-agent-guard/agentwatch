@@ -1,5 +1,5 @@
 import type { CSSProperties, FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AgentOnboarding from '@/components/AgentOnboarding';
 import AppShell from '@/components/dashboard/AppShell';
@@ -7,6 +7,7 @@ import BrandLogo from '@/components/BrandLogo';
 import { useActiveInstall } from '@/hooks/useActiveInstall';
 import {
   consumeAgentBindPrefill,
+  consumeAutoBindAfterLogin,
   parseBindPrefillFromSearch,
 } from '@/lib/agentBindPrefill';
 import { formatAccountLabel, getAuthProvider, getCurrentUser, signOut } from '@/lib/auth';
@@ -34,11 +35,13 @@ export default function Settings() {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [installPrefillNote, setInstallPrefillNote] = useState<string | null>(null);
+  const [autoBinding, setAutoBinding] = useState(false);
   const [liveStatus, setLiveStatus] = useState<LiveEntitlementStatus | null>(null);
+  const autoBindStarted = useRef(false);
 
   const liveGate = isLiveGateEnabled();
   const isOnboarding =
-    previewOnboarding || (isLiveDataMode() && !loading && agents.length === 0);
+    previewOnboarding || (isLiveDataMode() && !loading && agents.length === 0 && !autoBinding);
 
   useEffect(() => {
     if (!liveGate || guest) {
@@ -46,6 +49,11 @@ export default function Settings() {
     }
     void fetchLiveEntitlementStatus().then(setLiveStatus);
   }, [liveGate, guest]);
+
+  const flash = useCallback((msg: string) => {
+    setStatus(msg);
+    window.setTimeout(() => setStatus(null), 3000);
+  }, []);
 
   useEffect(() => {
     const fromUrl = parseBindPrefillFromSearch(`?${searchParams.toString()}`);
@@ -60,13 +68,91 @@ export default function Settings() {
     if (prefill.uploadSecret) {
       setUploadSecret(prefill.uploadSecret);
     }
-    if (prefill.agentId || prefill.uploadSecret) {
+    const canAutoBind = Boolean(prefill.agentId && prefill.uploadSecret);
+    if (canAutoBind && (fromUrl !== null || consumeAutoBindAfterLogin())) {
+      setAutoBinding(true);
+      setInstallPrefillNote('正在自动接入本机 Agent…');
+    } else if (prefill.agentId || prefill.uploadSecret) {
       setInstallPrefillNote('已填入，点「接入」即可');
     }
     if (searchParams.toString()) {
       navigate('/settings', { replace: true });
     }
   }, [navigate, searchParams]);
+
+  const performAgentBind = useCallback(
+    async (trimmedId: string, secret: string, navigateHomeAfter: boolean) => {
+      setFieldError(null);
+      setBusy(true);
+
+      const existing = agents.find((row) => row.install_id === trimmedId);
+      if (existing) {
+        setActiveInstallId(existing.install_id);
+        selectInstallId(existing.install_id);
+        setAgentId('');
+        setUploadSecret('');
+        setBusy(false);
+        setAutoBinding(false);
+        if (navigateHomeAfter) {
+          navigate('/home', { replace: true });
+        }
+        return;
+      }
+
+      const bindRes = await bindInstallId(trimmedId, '我的 Agent');
+      if (bindRes.error || !bindRes.data) {
+        setBusy(false);
+        setAutoBinding(false);
+        setInstallPrefillNote(null);
+        flash(bindRes.error ?? '添加失败');
+        return;
+      }
+
+      if (secret && !shouldUseDemoData()) {
+        const secretRes = await registerUploadSecret(bindRes.data.install_id, secret);
+        if (secretRes.error || !secretRes.ok) {
+          setBusy(false);
+          setAutoBinding(false);
+          setInstallPrefillNote(null);
+          flash(secretRes.error ?? '密钥保存失败');
+          return;
+        }
+      }
+
+      setAgentId('');
+      setUploadSecret('');
+      setInstallPrefillNote(null);
+      setActiveInstallId(bindRes.data.install_id);
+      await refreshAgents();
+      selectInstallId(bindRes.data.install_id);
+      setBusy(false);
+      setAutoBinding(false);
+
+      if (navigateHomeAfter) {
+        navigate('/home', { replace: true });
+        return;
+      }
+      flash('Agent 已接入');
+    },
+    [agents, flash, navigate, refreshAgents, selectInstallId],
+  );
+
+  useEffect(() => {
+    if (autoBindStarted.current || !autoBinding || loading) {
+      return;
+    }
+    const trimmedId = agentId.trim();
+    const secret = uploadSecret.trim();
+    if (!trimmedId) {
+      return;
+    }
+    if (!shouldUseDemoData() && !secret) {
+      return;
+    }
+
+    autoBindStarted.current = true;
+    void performAgentBind(trimmedId, secret, true);
+  }, [autoBinding, agentId, uploadSecret, loading, performAgentBind]);
 
   useEffect(() => {
     if (guest) {
@@ -80,11 +166,6 @@ export default function Settings() {
       setProviderLabel(provider === 'github' ? 'GitHub' : provider === 'wallet' ? 'Wallet' : null);
     });
   }, [guest]);
-
-  const flash = (msg: string) => {
-    setStatus(msg);
-    window.setTimeout(() => setStatus(null), 3000);
-  };
 
   const handleAddAgent = async (e: FormEvent) => {
     e.preventDefault();
@@ -100,38 +181,7 @@ export default function Settings() {
       setFieldError('请填写上传密钥');
       return;
     }
-    setFieldError(null);
-    setBusy(true);
-
-    const wasOnboarding = isOnboarding;
-    const bindRes = await bindInstallId(trimmedId, '我的 Agent');
-    if (bindRes.error || !bindRes.data) {
-      setBusy(false);
-      flash(bindRes.error ?? '添加失败');
-      return;
-    }
-
-    if (uploadSecret.trim() && !shouldUseDemoData()) {
-      const secretRes = await registerUploadSecret(bindRes.data.install_id, uploadSecret);
-      if (secretRes.error || !secretRes.ok) {
-        setBusy(false);
-        flash(secretRes.error ?? '密钥保存失败');
-        return;
-      }
-    }
-
-    setAgentId('');
-    setUploadSecret('');
-    setActiveInstallId(bindRes.data.install_id);
-    await refreshAgents();
-    selectInstallId(bindRes.data.install_id);
-    setBusy(false);
-
-    if (wasOnboarding) {
-      navigate('/home', { replace: true });
-      return;
-    }
-    flash('Agent 已接入');
+    await performAgentBind(trimmedId, uploadSecret.trim(), isOnboarding);
   };
 
   const handleRemove = async (installId: string) => {
@@ -156,10 +206,10 @@ export default function Settings() {
     window.location.hash = '#/auth';
   };
 
-  if (loading && isLiveDataMode() && !previewOnboarding) {
+  if ((loading || autoBinding) && isLiveDataMode() && !previewOnboarding && agents.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#131a26] text-sm text-white/60">
-        正在加载…
+        {autoBinding ? '正在自动接入 Agent…' : '正在加载…'}
       </div>
     );
   }
@@ -263,9 +313,9 @@ export default function Settings() {
             <div className="dash-settings-row__meta">
               <h2 className="dash-settings-row__title">我的 Agent</h2>
               <p className="dash-settings-row__desc">
-                在本机命令行运行{' '}
-                <span className="dash-settings__mono">agentwatch-web3 credentials</span>
-                ，粘贴 ID 与密钥即可接入。
+                {agents.length > 0
+                  ? '已记录本机 Agent，Dashboard 只展示当前设备数据。'
+                  : '终端运行 agentwatch-web3 credentials，会自动接入。'}
               </p>
             </div>
           </div>
@@ -286,6 +336,7 @@ export default function Settings() {
                       className={`dash-settings-agent__select${active ? ' dash-settings-agent__select--active' : ''}`}
                     >
                       <span className="dash-settings-agent__name">{agent.label}</span>
+                      <span className="dash-settings-agent__id">{agent.install_id}</span>
                       {active && <span className="dash-settings-agent__mark">当前</span>}
                     </button>
                     <button
@@ -302,36 +353,72 @@ export default function Settings() {
             </ul>
           )}
 
-          <form onSubmit={(e) => void handleAddAgent(e)} className="dash-settings-add" noValidate>
-            <input
-              value={agentId}
-              onChange={(e) => {
-                setAgentId(e.target.value);
-                if (fieldError) setFieldError(null);
-              }}
-              className={`dash-input dash-input--plain dash-input--settings${fieldError && !agentId.trim() ? ' dash-input--invalid' : ''}`}
-              placeholder="Agent ID"
-              spellCheck={false}
-              autoComplete="off"
-            />
-            {!shouldUseDemoData() && (
+          {agents.length === 0 ? (
+            <form onSubmit={(e) => void handleAddAgent(e)} className="dash-settings-add" noValidate>
               <input
-                value={uploadSecret}
+                value={agentId}
                 onChange={(e) => {
-                  setUploadSecret(e.target.value);
+                  setAgentId(e.target.value);
                   if (fieldError) setFieldError(null);
                 }}
-                className={`dash-input dash-input--plain dash-input--settings${fieldError && !uploadSecret.trim() ? ' dash-input--invalid' : ''}`}
-                placeholder="上传密钥"
+                className={`dash-input dash-input--plain dash-input--settings${fieldError && !agentId.trim() ? ' dash-input--invalid' : ''}`}
+                placeholder="Agent ID"
                 spellCheck={false}
                 autoComplete="off"
               />
-            )}
-            {fieldError && <p className="dash-field-hint">{fieldError}</p>}
-            <button type="submit" disabled={busy} className="dash-ghost-btn dash-settings-save">
-              添加
-            </button>
-          </form>
+              {!shouldUseDemoData() && (
+                <input
+                  value={uploadSecret}
+                  onChange={(e) => {
+                    setUploadSecret(e.target.value);
+                    if (fieldError) setFieldError(null);
+                  }}
+                  className={`dash-input dash-input--plain dash-input--settings${fieldError && !uploadSecret.trim() ? ' dash-input--invalid' : ''}`}
+                  placeholder="上传密钥"
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+              )}
+              {fieldError && <p className="dash-field-hint">{fieldError}</p>}
+              <button type="submit" disabled={busy} className="dash-ghost-btn dash-settings-save">
+                添加
+              </button>
+            </form>
+          ) : (
+            <details className="dash-settings-add-more">
+              <summary>添加另一台设备</summary>
+              <form onSubmit={(e) => void handleAddAgent(e)} className="dash-settings-add" noValidate>
+                <input
+                  value={agentId}
+                  onChange={(e) => {
+                    setAgentId(e.target.value);
+                    if (fieldError) setFieldError(null);
+                  }}
+                  className={`dash-input dash-input--plain dash-input--settings${fieldError && !agentId.trim() ? ' dash-input--invalid' : ''}`}
+                  placeholder="Agent ID"
+                  spellCheck={false}
+                  autoComplete="off"
+                />
+                {!shouldUseDemoData() && (
+                  <input
+                    value={uploadSecret}
+                    onChange={(e) => {
+                      setUploadSecret(e.target.value);
+                      if (fieldError) setFieldError(null);
+                    }}
+                    className={`dash-input dash-input--plain dash-input--settings${fieldError && !uploadSecret.trim() ? ' dash-input--invalid' : ''}`}
+                    placeholder="上传密钥"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                )}
+                {fieldError && <p className="dash-field-hint">{fieldError}</p>}
+                <button type="submit" disabled={busy} className="dash-ghost-btn dash-settings-save">
+                  添加
+                </button>
+              </form>
+            </details>
+          )}
         </section>
     </AppShell>
   );

@@ -178,7 +178,7 @@ export default function AgentOnboarding({
               </p>
             </MiniStep>
 
-            <MiniStep n="3" title="粘贴 Agent ID，点接入">
+            <MiniStep n="3" title="登录网页后会自动记录；没自动填再手动粘贴">
               <form className="agent-onboard__form agent-onboard__form--compact" onSubmit={handleSubmit} noValidate>
                 <PasteCredentialsButton
                   onPaste={(id, secret) => {

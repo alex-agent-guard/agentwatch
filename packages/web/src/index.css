@@ -1311,14 +1311,37 @@ code,
 
 .dash-settings-agent__select {
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
   border: none;
   background: transparent;
   padding: 0;
   cursor: pointer;
   color: var(--text-primary);
   font-size: 0.8125rem;
+}
+
+.dash-settings-agent__id {
+  font-size: 0.6875rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.dash-settings-add-more {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.dash-settings-add-more summary {
+  cursor: pointer;
+  list-style: none;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.dash-settings-add-more summary::-webkit-details-marker {
+  display: none;
 }
 
 .dash-settings-agent__select--active .dash-settings-agent__name {

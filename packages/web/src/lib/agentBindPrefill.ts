@@ -1,5 +1,6 @@
 /** 安装脚本写入、Settings 读取 — 登录跳转不丢 Agent 凭证 */
 const BIND_PREFILL_KEY = 'agentwatch_bind_prefill';
+const AUTO_BIND_KEY = 'agentwatch_auto_bind';
 
 export interface AgentBindPrefill {
   agentId: string;
@@ -21,6 +22,25 @@ export function storeAgentBindPrefill(prefill: AgentBindPrefill): void {
     sessionStorage.setItem(BIND_PREFILL_KEY, JSON.stringify(prefill));
   } catch {
     /* ignore */
+  }
+}
+
+/** 安装脚本跳转 — 登录后自动绑定，无需手点「接入」 */
+export function markAutoBindAfterLogin(): void {
+  try {
+    sessionStorage.setItem(AUTO_BIND_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function consumeAutoBindAfterLogin(): boolean {
+  try {
+    const should = sessionStorage.getItem(AUTO_BIND_KEY) === '1';
+    sessionStorage.removeItem(AUTO_BIND_KEY);
+    return should;
+  } catch {
+    return false;
   }
 }
 
@@ -48,5 +68,8 @@ export function persistBindPrefillFromSearch(search: string): void {
   const prefill = parseBindPrefillFromSearch(search);
   if (prefill !== null) {
     storeAgentBindPrefill(prefill);
+    if (prefill.agentId && prefill.uploadSecret) {
+      markAutoBindAfterLogin();
+    }
   }
 }
