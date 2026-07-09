@@ -8,6 +8,14 @@ import {
 } from '@/lib/oauthRedirect';
 import { supabase } from '@/lib/supabase';
 
+import {
+  buildSiweMessage,
+  personalSign,
+  readChainId,
+  requestAccounts,
+  resolveEvmWallet,
+} from '@/lib/evmWallet';
+
 const WEB3_STATEMENT = 'Sign in to AgentWatch Dashboard';
 
 /** OAuth 回调后清理 ?code= / ?error=，避免 HashRouter 重复触发 */
@@ -127,16 +135,56 @@ export async function signInWithGitHub(): Promise<{ error: string | null }> {
 export async function signInWithWallet(): Promise<{ error: string | null }> {
   clearGuestMode();
 
-  if (typeof window.ethereum === 'undefined') {
-    return { error: '未检测到 EVM 钱包（MetaMask 等）' };
+  const wallet = resolveEvmWallet();
+  if (!wallet) {
+    return { error: '未检测到 EVM 钱包。请安装 OKX Wallet 或 MetaMask 浏览器扩展，并用 Chrome 打开本站。' };
   }
 
-  const { error } = await supabase.auth.signInWithWeb3({
-    chain: 'ethereum',
-    statement: WEB3_STATEMENT,
-  });
+  const origin = window.location.origin.replace(/\/$/, '');
 
-  return { error: error?.message ?? null };
+  try {
+    const address = await requestAccounts(wallet);
+    const chainId = await readChainId(wallet);
+    const message = buildSiweMessage({
+      domain: window.location.host,
+      address,
+      statement: WEB3_STATEMENT,
+      uri: `${origin}/`,
+      chainId,
+    });
+    const signature = await personalSign(wallet, message, address);
+
+    const { error } = await supabase.auth.signInWithWeb3({
+      chain: 'ethereum',
+      message,
+      signature: signature as `0x${string}`,
+    });
+
+    if (error) {
+      const msg = error.message ?? 'Wallet 登录失败';
+      if (/web3_provider_disabled|Web3 provider is disabled/i.test(msg)) {
+        return {
+          error:
+            'Supabase 未启用 Web3 Wallet。请打开 Supabase → Authentication → Providers → Web3 → 启用 Ethereum，保存后重试。',
+        };
+      }
+      if (/invalid|signature|siwe|chain/i.test(msg)) {
+        return { error: `Wallet 验签失败：${msg}（当前 Chain ID: ${chainId}）` };
+      }
+      return { error: msg };
+    }
+
+    return { error: null };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/Invalid value|fetch/i.test(msg)) {
+      return {
+        error:
+          '钱包扩展请求失败。请换 Chrome + OKX Wallet 扩展重试；若仍失败，改用 MetaMask 或在 OKX App 内置浏览器打开。',
+      };
+    }
+    return { error: msg };
+  }
 }
 
 export async function signOut(): Promise<void> {
