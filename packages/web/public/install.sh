@@ -4,7 +4,7 @@
 #   curl -fsSL <url>/install-agentwatch.sh | bash
 #   bash scripts/install-agentwatch.sh
 # 环境变量：
-#   AGENTWATCH_DASHBOARD_URL  默认 http://localhost:5173
+#   AGENTWATCH_DASHBOARD_URL  默认 https://www.deeptrench.space
 #   AGENTWATCH_SKIP_INIT=1    已有 config 时跳过 init
 set -euo pipefail
 
